@@ -724,7 +724,7 @@
     "description": "Translation for jsonViewer.tooltips.copy"
   },
   "jsonViewer_tooltips_search": {
-    "message": "Search (Ctrl+F)",
+    "message": "Search (Ctrl / Cmd + F)",
     "description": "Translation for jsonViewer.tooltips.search"
   },
   "jsonViewer_tooltips_copied": {

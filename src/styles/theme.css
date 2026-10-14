@@ -343,8 +343,15 @@
   color: var(--danger-color);
 }
 
-:root[data-theme="light"] .sys-evt-close-button:hover:not(:disabled),
+:root[data-theme="light"] .sys-evt-close-button:hover:not(:disabled) {
+  background: var(--warning-text);
+  border-color: var(--warning-text);
+  color: #ffffff;
+}
+
 :root[data-theme="light"] .sys-evt-error-button:hover:not(:disabled) {
+  background: var(--danger-color);
+  border-color: var(--danger-color);
   color: #ffffff;
 }
 

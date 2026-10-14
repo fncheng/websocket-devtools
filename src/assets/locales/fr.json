@@ -1,4 +1,6 @@
 {
+  "theme.switchToLight": "Passer au thème clair",
+  "theme.switchToDark": "Passer au thème sombre",
   "app.title": "WebSocket DevTools",
   "app.description": "Surveiller et déboguer les connexions WebSocket",
   "monitor.status.active": "Surveillance active",

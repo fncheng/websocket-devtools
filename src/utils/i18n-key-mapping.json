@@ -1,4 +1,6 @@
 {
+  "theme_switchToLight": "theme.switchToLight",
+  "theme_switchToDark": "theme.switchToDark",
   "app_title": "app.title",
   "app_description": "app.description",
   "monitor_status_active": "monitor.status.active",

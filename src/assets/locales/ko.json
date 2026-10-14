@@ -1,4 +1,6 @@
 {
+  "theme.switchToLight": "라이트 테마로 전환",
+  "theme.switchToDark": "다크 테마로 전환",
   "app.title": "WebSocket DevTools",
   "app.description": "WebSocket 연결 모니터링 및 디버깅",
   "monitor.status.active": "모니터링 중",

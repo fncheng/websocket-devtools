@@ -1,4 +1,12 @@
 {
+  "theme_switchToLight": {
+    "message": "Switch to light theme",
+    "description": "Translation for theme.switchToLight"
+  },
+  "theme_switchToDark": {
+    "message": "Switch to dark theme",
+    "description": "Translation for theme.switchToDark"
+  },
   "app_title": {
     "message": "WebSocket DevTools",
     "description": "Translation for app.title"

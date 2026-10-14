@@ -1,4 +1,6 @@
 {
+  "theme.switchToLight": "Zum hellen Design wechseln",
+  "theme.switchToDark": "Zum dunklen Design wechseln",
   "app.title": "WebSocket DevTools",
   "app.description": "WebSocket-Verbindungen überwachen und debuggen",
   "monitor.status.active": "Überwachung aktiv",

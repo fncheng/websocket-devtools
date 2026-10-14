@@ -17,6 +17,19 @@
 
   let connectionIdCounter = 0;
   const connections = new Map();
+  const CLIENT_CLOSE_FALLBACK_MS = 5000;
+
+  // Match native event dispatch: surface callback errors without stopping later listeners.
+  function reportUserCallbackError(error) {
+    if (typeof window.reportError === "function") {
+      window.reportError(error);
+      return;
+    }
+
+    queueMicrotask(() => {
+      throw error;
+    });
+  }
 
   // Binary Detection and Decoding Utilities
   function isBinaryData(data) {
@@ -137,11 +150,46 @@
 
 
 
-  function reflectiveDecodeProtobuf(bytes) {
+  // Schema-less decoding bounds.
+  // Without a schema, arbitrary binary payloads (audio frames, images, video)
+  // can look like deeply nested messages, and every level copies its slice.
+  // Keep the automatic decode bounded in both depth and total work so capture
+  // never stalls the page that owns the socket.
+  const MAX_PROTOBUF_DEPTH = 5;
+  const MAX_PROTOBUF_FIELD_BYTES = 64 * 1024;
+  const MAX_PROTOBUF_NODES = 20000;
+  const MAX_PROTOBUF_DECODE_MS = 20;
+
+  function createDecodeBudget() {
+    return {
+      nodes: MAX_PROTOBUF_NODES,
+      deadline: Date.now() + MAX_PROTOBUF_DECODE_MS,
+    };
+  }
+
+  function isDecodeBudgetExhausted(budget) {
+    return budget.nodes <= 0 || Date.now() > budget.deadline;
+  }
+
+  function bytesToBase64(bytes) {
+    const chunkSize = 0x8000;
+    let binary = '';
+
+    for (let index = 0; index < bytes.length; index += chunkSize) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(index, index + chunkSize));
+    }
+
+    return btoa(binary);
+  }
+
+  function reflectiveDecodeProtobuf(bytes, budget, depth) {
     const result = {};
     let position = 0;
     
     while (position < bytes.length) {
+      if (isDecodeBudgetExhausted(budget)) break;
+      budget.nodes -= 1;
+
       const header = readVarint(bytes, position);
       if (!header) break;
       
@@ -152,7 +200,7 @@
       const fieldName = `field_${tag}`;
       
       try {
-        const fieldResult = decodeField(bytes, position, wireType);
+        const fieldResult = decodeField(bytes, position, wireType, budget, depth);
         if (fieldResult) {
           result[fieldName] = fieldResult.value;
           position = fieldResult.nextPosition;
@@ -168,7 +216,7 @@
     return result;
   }
 
-  function decodeField(bytes, position, wireType) {
+  function decodeField(bytes, position, wireType, budget, depth) {
     switch (wireType) {
       case 0:
         const varint = readVarint(bytes, position);
@@ -192,13 +240,18 @@
         
         const data = bytes.slice(start, end);
         
-        try {
-          const nested = reflectiveDecodeProtobuf(data);
-          if (Object.keys(nested).length > 0) {
-            return { value: nested, nextPosition: end };
+        // Only look for an embedded message while the nesting depth stays
+        // plausible. Raw byte fields such as audio frames would otherwise be
+        // parsed as messages at every level.
+        if (depth < MAX_PROTOBUF_DEPTH && length.value <= MAX_PROTOBUF_FIELD_BYTES) {
+          try {
+            const nested = reflectiveDecodeProtobuf(data, budget, depth + 1);
+            if (Object.keys(nested).length > 0) {
+              return { value: nested, nextPosition: end };
+            }
+          } catch (e) {
+            // Not a nested message
           }
-        } catch (e) {
-          // Not a nested message
         }
         
         try {
@@ -206,7 +259,7 @@
           const str = decoder.decode(data);
           return { value: str, nextPosition: end };
         } catch (e) {
-          const base64 = btoa(String.fromCharCode(...data));
+          const base64 = bytesToBase64(data);
           return { value: `<bytes: ${base64}>`, nextPosition: end };
         }
         
@@ -358,7 +411,7 @@
     if (bytes.length === 0) return null;
     
     try {
-      const result = reflectiveDecodeProtobuf(bytes);
+      const result = reflectiveDecodeProtobuf(bytes, createDecodeBudget(), 0);
       if (Object.keys(result).length > 0) {
         return JSON.stringify(result, null, 2);
       }
@@ -483,8 +536,8 @@
   }
 
   // Send event to content script (buffered)
-  function sendEvent(eventData) {
-    if(!proxyState.isMonitoring){
+  function sendEvent(eventData, force = false) {
+    if(!proxyState.isMonitoring && !force){
       return;
     }
 
@@ -587,6 +640,7 @@
             try {
               connectionInfo.userOnMessage.call(ws, simulatedEvent);
             } catch (error) {
+              reportUserCallbackError(error);
             }
           }
           
@@ -594,6 +648,7 @@
             try {
               listener.call(ws, simulatedEvent);
             } catch (error) {
+              reportUserCallbackError(error);
             }
           });
           
@@ -602,6 +657,12 @@
       }
     } catch (error) {
     }
+  }
+
+  function clearClientCloseFallback(connectionInfo) {
+    if (!connectionInfo.closeFallbackTimer) return;
+    clearTimeout(connectionInfo.closeFallbackTimer);
+    connectionInfo.closeFallbackTimer = null;
   }
 
   // Handle simulated system event
@@ -653,10 +714,12 @@
               try {
                 ws.onclose.call(ws, closeEvent);
               } catch (error) {
+                reportUserCallbackError(error);
               }
             }
 
             // Send system event to extension
+            connectionInfo.closeEventReported = true;
             sendEvent({
               id: connectionId,
               url: connectionInfo.url,
@@ -668,7 +731,7 @@
               simulated: true,
               systemEventType: "client-close", // Keep original intention
               messageId: generateMessageId(),
-            });
+            }, true);
 
             // Clean up connection
             connections.delete(connectionId);
@@ -676,18 +739,41 @@
           }
           
           connectionInfo.isSimulatingClose = true; // Set flag
-          
           try {
             // Call original WebSocket's close method
             // This will trigger the native WebSocket close handshake, and the browser will naturally emit a 'close' event,
             // which our proxy's 'close' event listener will capture and process.
             connectionInfo.originalClose.call(ws, requestedCode, requestedReason);
+            connectionInfo.status = "closing";
+            connectionInfo.closeFallbackTimer = setTimeout(() => {
+              connectionInfo.closeFallbackTimer = null;
+              if (connectionInfo.status !== "closing") return;
+
+              connectionInfo.status = "closed";
+              connectionInfo.isSimulatingClose = false;
+              connectionInfo.closeEventReported = true;
+              sendEvent({
+                id: connectionId,
+                url: connectionInfo.url,
+                type: "close",
+                data: `Client Close Timeout: Code: ${requestedCode}, Reason: ${requestedReason}`,
+                direction: "system",
+                timestamp: Date.now(),
+                status: "closed",
+                simulated: true,
+                systemEventType: "client-close",
+                messageId: generateMessageId(),
+              }, true);
+              connections.delete(connectionId);
+            }, CLIENT_CLOSE_FALLBACK_MS);
           } catch (error) {
+            connectionInfo.isSimulatingClose = false;
           }
 
           break;
 
         case "server-close":
+          clearClientCloseFallback(connectionInfo);
           
           // Create simulated CloseEvent
           const closeEvent = new CloseEvent("close", {
@@ -710,6 +796,7 @@
             try {
               ws.onclose.call(ws, closeEvent);
             } catch (error) {
+              reportUserCallbackError(error);
             }
           }
 
@@ -731,6 +818,7 @@
 
         case "client-error":
         case "server-error":
+          clearClientCloseFallback(connectionInfo);
           
           // Create simulated ErrorEvent
           const errorEvent = new ErrorEvent("error", {
@@ -753,6 +841,7 @@
             try {
               ws.onerror.call(ws, errorEvent);
             } catch (error) {
+              reportUserCallbackError(error);
             }
           }
 
@@ -807,6 +896,8 @@
       messageQueue: [], // Message queue during pause
       blockedMessages: [], // Blocked messages
       isSimulatingClose: false, // New: for marking if client-initiated close is being simulated
+      closeFallbackTimer: null,
+      closeEventReported: false,
     };
 
     connections.set(connectionId, connectionInfo);
@@ -835,6 +926,7 @@
           try {
             connectionInfo.userOnMessage.call(ws, event);
           } catch (error) {
+            reportUserCallbackError(error);
           }
         }
         
@@ -842,6 +934,7 @@
           try {
             listener.call(ws, event);
           } catch (error) {
+            reportUserCallbackError(error);
           }
         });
         
@@ -904,6 +997,7 @@
         try {
           connectionInfo.userOnMessage.call(ws, event);
         } catch (error) {
+          reportUserCallbackError(error);
         }
       }
       
@@ -911,6 +1005,7 @@
         try {
           listener.call(ws, event);
         } catch (error) {
+          reportUserCallbackError(error);
         }
       });
     };
@@ -1014,6 +1109,12 @@
     ["open", "close", "error"].forEach((eventType) => {
       connectionInfo.originalAddEventListener(eventType, (event) => {
 
+        if (eventType === "close") clearClientCloseFallback(connectionInfo);
+        if (eventType === "close" && connectionInfo.closeEventReported) {
+          return;
+        }
+        const forceEvent = eventType === "close" && connectionInfo.isSimulatingClose;
+
         // Update connection status
         if (eventType === "open") {
           connectionInfo.status = "open";
@@ -1064,7 +1165,10 @@
             }
         }
         
-        sendEvent(payload);
+        if (eventType === "close") {
+          connectionInfo.closeEventReported = true;
+        }
+        sendEvent(payload, forceEvent);
 
         if (eventType === "close") {
           connections.delete(connectionId);

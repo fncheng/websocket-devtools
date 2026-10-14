@@ -40,6 +40,14 @@
 2. 点击 **"获取"** 并确认安装
 3. 打开开发者工具 (F12) → **"WebSocket DevTools"** 标签页
 
+### 从 GitHub 手动安装
+1. 下载[最新 GitHub Release](https://github.com/law-chain-hot/websocket-devtools/releases/latest)中附带的 ZIP 文件
+2. 解压 ZIP 文件
+3. 打开 `chrome://extensions` 或 `edge://extensions`
+4. 开启**开发者模式**，选择**加载已解压的扩展程序**，然后选中解压后的文件夹
+
+> 手动安装不会自动更新，请通过 Releases 页面获取新版本。
+
 ### 官网
 
 - 🌐 [WebSocket DevTools](https://websocket-devtools.com) - 官方网站
@@ -107,6 +115,12 @@
 - ✅ **开源代码** - 完全透明且可审计的代码
 - ✅ **最小权限** - 仅请求功能所需的权限
 
+## 🤝 贡献与支持
+
+- 提交 Pull Request 前请先阅读 [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Bug 和功能建议请通过 [GitHub Issues](https://github.com/law-chain-hot/websocket-devtools/issues/new/choose) 提交
+- 安全漏洞请按照 [SECURITY.md](./SECURITY.md) 私下报告
+
 ## 🛠 系统要求
 
 - **Chrome 88+** 或基于Chromium的浏览器 (Edge, Brave等)
@@ -125,7 +139,7 @@
 
 </div> 
 
-[version-shield]: https://img.shields.io/badge/version-1.0.6-55b467?labelColor=black&logo=github&style=flat-square
+[version-shield]: https://img.shields.io/badge/version-1.4.0-55b467?labelColor=black&logo=github&style=flat-square
 [license-shield]: https://img.shields.io/badge/license-MIT-369eff?labelColor=black&logo=opensourceinitiative&style=flat-square
 [chrome-shield]: https://img.shields.io/badge/Chrome%20Web%20Store-Install-ffcb47?labelColor=black&logo=googlechrome&logoColor=white&style=flat-square
 [privacy-shield]: https://img.shields.io/badge/privacy-local%20only-c4f042?labelColor=black&logo=shield-check&style=flat-square

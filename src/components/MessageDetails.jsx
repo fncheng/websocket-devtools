@@ -504,12 +504,12 @@ const MessageDetails = ({
   // Detail panel visual style adapts to split direction (shadow/rounded corners face the list)
   const detailPanelStyle = isHorizontal
     ? {
-        boxShadow: "rgba(21, 21, 21, 0.81) -5px 0px 20px 20px",
+        boxShadow: "var(--detail-shadow-horizontal, rgba(21, 21, 21, 0.81) -5px 0px 20px 20px)",
         borderTopLeftRadius: "20px",
         borderBottomLeftRadius: "20px",
       }
     : {
-        boxShadow: "rgba(21, 21, 21, 0.81) 0px -5px 20px 20px",
+        boxShadow: "var(--detail-shadow-vertical, rgba(21, 21, 21, 0.81) 0px -5px 20px 20px)",
         borderTopLeftRadius: "20px",
         borderTopRightRadius: "20px",
       };

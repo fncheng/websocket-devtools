@@ -1,4 +1,6 @@
 {
+  "theme.switchToLight": "切換至亮色主題",
+  "theme.switchToDark": "切換至暗色主題",
   "app.title": "WebSocket DevTools",
   "app.description": "監控和調試 WebSocket 連線",
   "monitor.status.active": "監控進行中",

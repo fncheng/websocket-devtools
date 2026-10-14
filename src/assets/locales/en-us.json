@@ -1,4 +1,6 @@
 {
+  "theme.switchToLight": "Switch to light theme",
+  "theme.switchToDark": "Switch to dark theme",
   "app.title": "WebSocket DevTools",
   "app.description": "Monitor and debug WebSocket connections",
   "monitor.status.active": "Monitoring Active",

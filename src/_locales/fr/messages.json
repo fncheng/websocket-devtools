@@ -1,4 +1,12 @@
 {
+  "theme_switchToLight": {
+    "message": "Passer au thème clair",
+    "description": "Translation for theme.switchToLight"
+  },
+  "theme_switchToDark": {
+    "message": "Passer au thème sombre",
+    "description": "Translation for theme.switchToDark"
+  },
   "app_title": {
     "message": "WebSocket DevTools",
     "description": "Translation for app.title"
@@ -811,6 +819,62 @@
     "message": "Effacer tous les messages",
     "description": "Translation for messageDetails.controls.clearMessages"
   },
+  "messageDetails_grouping_enable": {
+    "message": "Grouper",
+    "description": "Translation for messageDetails.grouping.enable"
+  },
+  "messageDetails_grouping_field": {
+    "message": "Champ",
+    "description": "Translation for messageDetails.grouping.field"
+  },
+  "messageDetails_grouping_value": {
+    "message": "Valeur",
+    "description": "Translation for messageDetails.grouping.value"
+  },
+  "messageDetails_grouping_displayField": {
+    "message": "Afficher",
+    "description": "Translation for messageDetails.grouping.displayField"
+  },
+  "messageDetails_grouping_tooltip": {
+    "message": "Grouper les messages par champ JSON et valeur exacte optionnelle",
+    "description": "Translation for messageDetails.grouping.tooltip"
+  },
+  "messageDetails_grouping_emptyValueHint": {
+    "message": "Laisser la valeur vide pour grouper par toutes les valeurs du champ",
+    "description": "Translation for messageDetails.grouping.emptyValueHint"
+  },
+  "messageDetails_grouping_other": {
+    "message": "Autres messages",
+    "description": "Translation for messageDetails.grouping.other"
+  },
+  "messageDetails_grouping_noField": {
+    "message": "Aucun {{field}}",
+    "description": "Translation for messageDetails.grouping.noField"
+  },
+  "messageDetails_grouping_sort": {
+    "message": "Trier",
+    "description": "Translation for messageDetails.grouping.sort"
+  },
+  "messageDetails_grouping_sort_firstOutgoing": {
+    "message": "Premier envoyé",
+    "description": "Translation for messageDetails.grouping.sort.firstOutgoing"
+  },
+  "messageDetails_grouping_sort_firstMessage": {
+    "message": "Premier message",
+    "description": "Translation for messageDetails.grouping.sort.firstMessage"
+  },
+  "messageDetails_grouping_sort_latestMessage": {
+    "message": "Dernier message",
+    "description": "Translation for messageDetails.grouping.sort.latestMessage"
+  },
+  "messageDetails_grouping_sort_groupValue": {
+    "message": "Valeur du groupe",
+    "description": "Translation for messageDetails.grouping.sort.groupValue"
+  },
+  "messageDetails_grouping_sort_messageCount": {
+    "message": "Nombre de messages",
+    "description": "Translation for messageDetails.grouping.sort.messageCount"
+  },
   "messageDetails_table_data": {
     "message": "Données",
     "description": "Translation for messageDetails.table.data"
@@ -939,6 +1003,14 @@
     "message": "Coller",
     "description": "Translation for common.paste"
   },
+  "common_rawData": {
+    "message": "Données brutes",
+    "description": "Translation for common.rawData"
+  },
+  "common_binary": {
+    "message": "BINAIRE",
+    "description": "Translation for common.binary"
+  },
   "common_cut": {
     "message": "Couper",
     "description": "Translation for common.cut"
@@ -1042,6 +1114,18 @@
   "simulate_animated_githubTooltip": {
     "message": "Si vous aimez ce plugin, jetez un œil à notre dépôt Github ~",
     "description": "Translation for simulate.animated.githubTooltip"
+  },
+  "jsonViewer_tooltips_search": {
+    "message": "Rechercher (Ctrl+F)",
+    "description": "Translation for jsonViewer.tooltips.search"
+  },
+  "messageDetails_controls_horizontalLayout": {
+    "message": "Passer en disposition gauche/droite",
+    "description": "Translation for messageDetails.controls.horizontalLayout"
+  },
+  "messageDetails_controls_verticalLayout": {
+    "message": "Passer en disposition haut/bas",
+    "description": "Translation for messageDetails.controls.verticalLayout"
   },
   "messageDetails_projection_mode": {
     "message": "Mode d'affichage",

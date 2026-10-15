@@ -300,7 +300,7 @@
   "messageDetails.projection.status.unsupported": "Dieser Nachrichtentyp wird nicht unterstützt",
   "messageDetails.projection.status.notApplicable": "Nicht anwendbar",
   "messageDetails.projection.status.empty": "Leere Zeichenfolge",
-  "messageDetails.projection.status.whitespace": "Leerzeichen",
+  "messageDetails.projection.status.whitespace": "Whitespace-Zeichen",
   "messageDetails.projection.expand": "Erweitern",
   "messageDetails.projection.collapse": "Einklappen",
   "messageDetails.projection.searchRawTooltip": "Durchsucht rohe Nachrichtendaten",

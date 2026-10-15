@@ -1120,7 +1120,7 @@
     "description": "Translation for messageDetails.projection.status.empty"
   },
   "messageDetails_projection_status_whitespace": {
-    "message": "Leerzeichen",
+    "message": "Leerraumzeichen",
     "description": "Translation for messageDetails.projection.status.whitespace"
   },
   "messageDetails_projection_expand": {

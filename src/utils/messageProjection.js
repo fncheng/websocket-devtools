@@ -325,6 +325,11 @@ export const buildProjectedSections = (messageSections, config, tokens, cache) =
     .filter((section) => section.projectedMessages.length > 0)
 );
 
+/** @param {Array<{ projectedMessages: Array<{ message: object }> }>} projectedSections */
+export const getProjectedMessages = (projectedSections) => (
+  projectedSections.flatMap((section) => section.projectedMessages.map(({ message }) => message))
+);
+
 /**
  * Keep keyboard selection aligned with rows actually rendered after group collapse.
  * @param {Array<{ id: string, isGrouped: boolean, projectedMessages: Array<{ message: object }> }>} projectedSections

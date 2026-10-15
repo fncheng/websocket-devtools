@@ -5,6 +5,7 @@ import {
   collectFieldCandidates,
   createMessageProjectionCache,
   extractMessageField,
+  getProjectedMessages,
   getVisibleProjectedMessages,
   parseProjectionPath,
 } from "../src/utils/messageProjection.js";
@@ -159,6 +160,10 @@ test("projection keeps original groups, hides empty or missing rows, and keyboar
   assert.deepEqual(
     getVisibleProjectedMessages(projected, { "group:a": true }).map((source) => source.messageId),
     ["b-second"]
+  );
+  assert.deepEqual(
+    getProjectedMessages(projected).map((source) => source.messageId),
+    ["a-first", "b-second"]
   );
 
   const allRows = buildProjectedSections(

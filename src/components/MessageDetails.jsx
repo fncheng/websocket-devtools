@@ -25,6 +25,7 @@ import MessageProjectionValue from "./MessageProjectionValue.jsx";
 import {
   createMessageProjectionCache,
   buildProjectedSections,
+  getProjectedMessages,
   getVisibleProjectedMessages,
   parseProjectionPath,
 } from "../utils/messageProjection.js";
@@ -202,6 +203,11 @@ const MessageDetails = ({
     () => buildProjectedSections(messageSections, activeProjectionConfig, projectionTokens, projectionCacheRef.current),
     [activeProjectionConfig, messageSections, projectionTokens]
   );
+  // Detail selection remains available when its group is collapsed.
+  const projectedMessages = useMemo(
+    () => getProjectedMessages(projectedSections),
+    [projectedSections]
+  );
 
   const visibleMessages = useMemo(
     () => getVisibleProjectedMessages(projectedSections, collapsedGroups),
@@ -243,10 +249,10 @@ const MessageDetails = ({
   }, [connectionIds]);
 
   useEffect(() => {
-    if (selectedMessageKey && !visibleMessages.some((message) => message.messageId === selectedMessageKey)) {
+    if (selectedMessageKey && !projectedMessages.some((message) => message.messageId === selectedMessageKey)) {
       setSelectedMessageKey(null);
     }
-  }, [selectedMessageKey, visibleMessages]);
+  }, [projectedMessages, selectedMessageKey]);
 
   // Keyboard navigation for message selection
   useEffect(() => {
@@ -470,7 +476,7 @@ const MessageDetails = ({
 
   const getSelectedMessage = () => {
     if (!selectedMessageKey) return null;
-    return visibleMessages.find((msg) => {
+    return projectedMessages.find((msg) => {
       return msg.messageId === selectedMessageKey;
     });
   };

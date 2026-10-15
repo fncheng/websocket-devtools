@@ -83,6 +83,18 @@ test("candidate paths round-trip for root, dots, Unicode, arrays, and empty keys
   for (const path of paths) assert.equal(extract(source, path).status, "matched");
 });
 
+test("field projection works when Object.hasOwn is unavailable", () => {
+  const originalHasOwn = Object.hasOwn;
+  Object.hasOwn = undefined;
+  try {
+    const source = message({ payload: { value: "visible" } });
+    assert.equal(extract(source, "payload.value").status, "matched");
+    assert.deepEqual(collectFieldCandidates([source]).map((candidate) => candidate.path), ["payload.value"]);
+  } finally {
+    Object.hasOwn = originalHasOwn;
+  }
+});
+
 test("candidate traversal stops at maxNodes without wide-object expansion", () => {
   let reads = 0;
   const wide = {};

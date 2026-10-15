@@ -181,7 +181,7 @@ export const extractMessageField = (message, tokens, cache, pathKey = "") => {
     let value = entry.parsed.value;
     let found = true;
     for (const token of tokens) {
-      if (value === null || typeof value !== "object" || !Object.hasOwn(value, token)) {
+      if (value === null || typeof value !== "object" || !Object.prototype.hasOwnProperty.call(value, token)) {
         found = false;
         break;
       }
@@ -289,7 +289,7 @@ export const collectFieldCandidates = (messages, budget = {}, cache) => {
       } else {
         for (const key in current.value) {
           if (visitedNodes >= maxNodes || candidates.length >= maxCandidates) break;
-          if (!Object.hasOwn(current.value, key)) continue;
+          if (!Object.prototype.hasOwnProperty.call(current.value, key)) continue;
           visitChild(key, current.value[key], false);
         }
       }

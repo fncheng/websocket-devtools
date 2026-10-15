@@ -1,4 +1,12 @@
 {
+  "theme_switchToLight": {
+    "message": "Zum hellen Design wechseln",
+    "description": "Translation for theme.switchToLight"
+  },
+  "theme_switchToDark": {
+    "message": "Zum dunklen Design wechseln",
+    "description": "Translation for theme.switchToDark"
+  },
   "app_title": {
     "message": "WebSocket DevTools",
     "description": "Translation for app.title"
@@ -807,6 +815,62 @@
     "message": "Alle Nachrichten löschen",
     "description": "Translation for messageDetails.controls.clearMessages"
   },
+  "messageDetails_grouping_enable": {
+    "message": "Gruppieren",
+    "description": "Translation for messageDetails.grouping.enable"
+  },
+  "messageDetails_grouping_field": {
+    "message": "Feld",
+    "description": "Translation for messageDetails.grouping.field"
+  },
+  "messageDetails_grouping_value": {
+    "message": "Wert",
+    "description": "Translation for messageDetails.grouping.value"
+  },
+  "messageDetails_grouping_displayField": {
+    "message": "Anzeigen",
+    "description": "Translation for messageDetails.grouping.displayField"
+  },
+  "messageDetails_grouping_tooltip": {
+    "message": "Nachrichten nach JSON-Feld und optionalem exaktem Wert gruppieren",
+    "description": "Translation for messageDetails.grouping.tooltip"
+  },
+  "messageDetails_grouping_emptyValueHint": {
+    "message": "Wert leer lassen, um nach allen Feldwerten zu gruppieren",
+    "description": "Translation for messageDetails.grouping.emptyValueHint"
+  },
+  "messageDetails_grouping_other": {
+    "message": "Andere Nachrichten",
+    "description": "Translation for messageDetails.grouping.other"
+  },
+  "messageDetails_grouping_noField": {
+    "message": "Kein {{field}}",
+    "description": "Translation for messageDetails.grouping.noField"
+  },
+  "messageDetails_grouping_sort": {
+    "message": "Sortieren",
+    "description": "Translation for messageDetails.grouping.sort"
+  },
+  "messageDetails_grouping_sort_firstOutgoing": {
+    "message": "Erste gesendete",
+    "description": "Translation for messageDetails.grouping.sort.firstOutgoing"
+  },
+  "messageDetails_grouping_sort_firstMessage": {
+    "message": "Erste Nachricht",
+    "description": "Translation for messageDetails.grouping.sort.firstMessage"
+  },
+  "messageDetails_grouping_sort_latestMessage": {
+    "message": "Neueste Nachricht",
+    "description": "Translation for messageDetails.grouping.sort.latestMessage"
+  },
+  "messageDetails_grouping_sort_groupValue": {
+    "message": "Gruppenwert",
+    "description": "Translation for messageDetails.grouping.sort.groupValue"
+  },
+  "messageDetails_grouping_sort_messageCount": {
+    "message": "Nachrichtenanzahl",
+    "description": "Translation for messageDetails.grouping.sort.messageCount"
+  },
   "messageDetails_table_data": {
     "message": "Daten",
     "description": "Translation for messageDetails.table.data"
@@ -935,6 +999,14 @@
     "message": "Einfügen",
     "description": "Translation for common.paste"
   },
+  "common_rawData": {
+    "message": "Rohdaten",
+    "description": "Translation for common.rawData"
+  },
+  "common_binary": {
+    "message": "BINÄR",
+    "description": "Translation for common.binary"
+  },
   "common_cut": {
     "message": "Ausschneiden",
     "description": "Translation for common.cut"
@@ -1039,6 +1111,18 @@
     "message": "Wenn Ihnen das Plugin gefällt, schauen Sie sich gerne unser Github-Repository an~",
     "description": "Translation for simulate.animated.githubTooltip"
   },
+  "jsonViewer_tooltips_search": {
+    "message": "Suchen (Strg/Cmd + F)",
+    "description": "Translation for jsonViewer.tooltips.search"
+  },
+  "messageDetails_controls_horizontalLayout": {
+    "message": "Zu Links-/Rechts-Layout wechseln",
+    "description": "Translation for messageDetails.controls.horizontalLayout"
+  },
+  "messageDetails_controls_verticalLayout": {
+    "message": "Zu Oben-/Unten-Layout wechseln",
+    "description": "Translation for messageDetails.controls.verticalLayout"
+  },
   "messageDetails_projection_mode": {
     "message": "Anzeigemodus",
     "description": "Translation for messageDetails.projection.mode"
@@ -1120,7 +1204,7 @@
     "description": "Translation for messageDetails.projection.status.empty"
   },
   "messageDetails_projection_status_whitespace": {
-    "message": "Leerraumzeichen",
+    "message": "Whitespace-Zeichen",
     "description": "Translation for messageDetails.projection.status.whitespace"
   },
   "messageDetails_projection_expand": {

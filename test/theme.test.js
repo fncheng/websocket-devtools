@@ -7,15 +7,22 @@ async function createThemeDocument({ saved, pendingRead = false } = {}) {
   const writes = [];
   const document = { documentElement: { dataset: {} } };
   let completeRead;
-  const read = pendingRead
-    ? new Promise((resolve) => { completeRead = resolve; })
-    : Promise.resolve({ 'websocket-devtools-theme': saved });
   globalThis.document = document;
   globalThis.chrome = {
+    runtime: { lastError: undefined },
     storage: {
       local: {
-        get: () => read,
-        set: async (value) => { writes.push(value); },
+        get: (_key, callback) => {
+          if (pendingRead) {
+            completeRead = callback;
+            return;
+          }
+          callback({ 'websocket-devtools-theme': saved });
+        },
+        set: (value, callback) => {
+          writes.push(value);
+          callback();
+        },
       },
       onChanged: { addListener: (listener) => storageListeners.add(listener) },
     },
@@ -26,7 +33,14 @@ async function createThemeDocument({ saved, pendingRead = false } = {}) {
       [theme.THEME_STORAGE_KEY]: { newValue: value },
     }, area));
   };
-  return { theme, document, storageListeners, writes, completeRead, emit };
+  return {
+    theme,
+    document,
+    storageListeners,
+    writes,
+    completeRead: (result) => completeRead(result),
+    emit,
+  };
 }
 
 test('theme defaults to the existing dark palette without changing saved settings', async () => {

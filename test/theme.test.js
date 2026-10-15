@@ -1,45 +1,85 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-// Each isolated module represents an extension document sharing Chrome storage.
-async function createThemeDocument({ saved, pendingRead = false } = {}) {
+function createThemeStorage(saved) {
   const storageListeners = new Set();
   const writes = [];
+
+  const emit = (value, area = 'local', sourceDocument) => {
+    const changes = { 'websocket-devtools-theme': { newValue: value } };
+    if (area === 'local') saved = value;
+    storageListeners.forEach(({ listener, document }) => {
+      if (document === sourceDocument) return;
+      listener(changes, area);
+    });
+  };
+
+  return {
+    createChrome(document) {
+      const chrome = {
+        runtime: { lastError: undefined },
+        storage: {
+          local: {
+            get: (_key, callback) => callback({ 'websocket-devtools-theme': saved }),
+            set: (value, callback) => {
+              writes.push(value);
+              emit(value['websocket-devtools-theme'], 'local', document);
+              callback();
+            },
+          },
+          onChanged: {
+            addListener(listener) {
+              storageListeners.add({
+                document,
+                listener: (changes, area) => {
+                  const previousDocument = globalThis.document;
+                  const previousChrome = globalThis.chrome;
+                  globalThis.document = document;
+                  globalThis.chrome = chrome;
+                  try {
+                    listener(changes, area);
+                  } finally {
+                    globalThis.document = previousDocument;
+                    globalThis.chrome = previousChrome;
+                  }
+                },
+              });
+            },
+          },
+        },
+      };
+      return chrome;
+    },
+    emit,
+    storageListeners,
+    writes,
+  };
+}
+
+// Each isolated module represents an extension document sharing a storage backend.
+async function createThemeDocument({ saved, pendingRead = false, storage = createThemeStorage(saved) } = {}) {
   const document = { documentElement: { dataset: {} } };
   let completeRead;
+  const chrome = storage.createChrome(document);
+  if (pendingRead) {
+    chrome.storage.local.get = (_key, callback) => {
+      completeRead = (result) => callback(result);
+    };
+  }
   globalThis.document = document;
-  globalThis.chrome = {
-    runtime: { lastError: undefined },
-    storage: {
-      local: {
-        get: (_key, callback) => {
-          if (pendingRead) {
-            completeRead = callback;
-            return;
-          }
-          callback({ 'websocket-devtools-theme': saved });
-        },
-        set: (value, callback) => {
-          writes.push(value);
-          callback();
-        },
-      },
-      onChanged: { addListener: (listener) => storageListeners.add(listener) },
-    },
-  };
+  globalThis.chrome = chrome;
   const theme = await import(`../src/utils/theme.js?document=${crypto.randomUUID()}`);
-  const emit = (value, area = 'local') => {
-    storageListeners.forEach((listener) => listener({
-      [theme.THEME_STORAGE_KEY]: { newValue: value },
-    }, area));
-  };
   return {
     theme,
     document,
-    storageListeners,
-    writes,
+    storageListeners: storage.storageListeners,
+    writes: storage.writes,
     completeRead: (result) => completeRead(result),
-    emit,
+    emit: storage.emit,
+    activate: () => {
+      globalThis.document = document;
+      globalThis.chrome = chrome;
+    },
   };
 }
 
@@ -79,6 +119,21 @@ test('external changes synchronize, ignore other storage areas, and reset on rem
   assert.equal(theme.getColorScheme(), 'dark');
   emit('invalid');
   assert.equal(theme.getColorScheme(), 'dark');
+});
+
+test('a preference change in one extension document synchronizes to another', async () => {
+  const storage = createThemeStorage();
+  const first = await createThemeDocument({ storage });
+  await first.theme.initializeTheme();
+  const second = await createThemeDocument({ storage });
+  await second.theme.initializeTheme();
+
+  first.activate();
+  first.theme.setColorScheme('light');
+
+  assert.equal(first.document.documentElement.dataset.theme, 'light');
+  assert.equal(second.theme.getColorScheme(), 'light');
+  assert.equal(second.document.documentElement.dataset.theme, 'light');
 });
 
 test('a stale initial read cannot overwrite a newer external preference or user action', async () => {

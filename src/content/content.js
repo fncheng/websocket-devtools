@@ -682,31 +682,16 @@ function showDevToolsHint() {
       applyHintTheme(changes[themeStorageKey].newValue);
     }
   };
-  let themeListenerRegistered = false;
-
-  if (hasValidExtensionContext()) {
-    try {
-      chrome.storage.onChanged.addListener(themeListener);
-      themeListenerRegistered = true;
-      chrome.storage.local.get([themeStorageKey], (result) => {
-        if (hasValidExtensionContext() && !chrome.runtime.lastError && !themeChanged && hint.isConnected) {
-          applyHintTheme(result[themeStorageKey]);
-        }
-      });
-    } catch (error) {
-      // The hint remains usable without the persisted theme during a reload.
+  chrome.storage.onChanged.addListener(themeListener);
+  chrome.storage.local.get([themeStorageKey], (result) => {
+    if (!chrome.runtime.lastError && !themeChanged && hint.isConnected) {
+      applyHintTheme(result[themeStorageKey]);
     }
-  }
+  });
 
   // Enhanced close functionality
   const closeHint = () => {
-    if (themeListenerRegistered && hasValidExtensionContext()) {
-      try {
-        chrome.storage.onChanged.removeListener(themeListener);
-      } catch (error) {
-        // The stale listener is discarded when Chrome unloads the old context.
-      }
-    }
+    chrome.storage.onChanged.removeListener(themeListener);
     if (hint.parentElement) {
       hint.remove();
     }

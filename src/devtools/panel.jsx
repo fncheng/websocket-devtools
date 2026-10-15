@@ -678,9 +678,9 @@ const WebSocketPanel = () => {
   // Show loading while i18n initializes
 
 
-  // Preserve Mantine's existing defaults in dark mode; opt into light explicitly.
+  // Keep Mantine components aligned with the extension-wide preference.
   return (
-    <MantineProvider forceColorScheme={colorScheme === "light" ? "light" : undefined}>
+    <MantineProvider forceColorScheme={colorScheme}>
       <div className="websocket-panel">
         <div className="panel-header">
           <div className="panel-header-left">
@@ -790,6 +790,7 @@ const WebSocketPanel = () => {
                 <MessageDetails
                   connection={selectedConnection}
                   selectedConnectionId={selectedConnectionId} // 传递连接ID用于详情面板重新渲染
+                  connectionIds={connectionsMap}
                   onSimulateMessage={handleSimulateMessage}
                   onClearMessages={handleClearMessages}
                   onOpenSimulatePanel={handleOpenSimulatePanel}

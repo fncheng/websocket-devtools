@@ -150,7 +150,7 @@ const SystemEventsTab = ({ connection, onSimulateSystemEvent }) => {
               {t("system.title")}
               <Tooltip
                 label={<span style={{whiteSpace: 'pre-line'}}>{t("system.closeEvent.notice")}</span>}
-                color="var(--system-warning-text, #f59e0b)"
+                color="var(--system-tooltip-background, rgb(65, 43, 6))"
                 position="right"
                 withArrow
                 arrowSize={6}

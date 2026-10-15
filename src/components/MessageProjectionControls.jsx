@@ -32,6 +32,12 @@ const MessageProjectionControls = ({ config, messages, cache, onChange }) => {
     onChange({ path: draftPath.trim() });
   };
 
+  const clearPath = () => {
+    setDraftPath("");
+    setPathError("");
+    onChange({ mode: "raw", path: "" });
+  };
+
   return (
     <div className="projection-controls">
       <div className="projection-mode" role="group" aria-label={t("messageDetails.projection.mode")}> 
@@ -60,7 +66,7 @@ const MessageProjectionControls = ({ config, messages, cache, onChange }) => {
               placeholder="choices[0].message.content"
             />
             <button type="button" onClick={applyPath}>{t("messageDetails.projection.apply")}</button>
-            {config.path && <button type="button" onClick={() => { setDraftPath(""); onChange({ path: "" }); }}>{t("messageDetails.projection.clear")}</button>}
+            {config.path && <button type="button" onClick={clearPath}>{t("messageDetails.projection.clear")}</button>}
           </div>
           {pathError && <span id="message-projection-path-error" className="projection-error" role="alert">{pathError}</span>}
           {candidates.length > 0 && (

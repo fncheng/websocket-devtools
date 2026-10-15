@@ -26,7 +26,7 @@
 .theme-toggle:focus-visible,
 :root[data-theme="light"] button:focus-visible,
 :root[data-theme="light"] a:focus-visible {
-  outline: 2px solid var(--accent-color);
+  outline: 2px solid var(--accent-color) !important;
   outline-offset: 2px;
 }
 

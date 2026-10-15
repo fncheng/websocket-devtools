@@ -32,12 +32,19 @@ export function initializeTheme() {
     }
   });
   const initialRevision = revision;
-  initialization = chrome.storage.local.get(THEME_STORAGE_KEY)
-    .then((result) => {
+  initialization = new Promise((resolve) => {
+    chrome.storage.local.get(THEME_STORAGE_KEY, (result) => {
+      const error = chrome.runtime.lastError;
+      if (error) {
+        console.warn('Failed to restore theme preference:', error);
+        resolve();
+        return;
+      }
       // A newer storage event or user action wins over this initial read.
       if (revision === initialRevision) applyColorScheme(result[THEME_STORAGE_KEY]);
-    })
-    .catch((error) => console.warn('Failed to restore theme preference:', error));
+      resolve();
+    });
+  });
   return initialization;
 }
 
@@ -56,6 +63,8 @@ export function subscribeTheme(listener) {
 export function setColorScheme(value) {
   revision += 1;
   applyColorScheme(value);
-  chrome.storage.local.set({ [THEME_STORAGE_KEY]: colorScheme })
-    .catch((error) => console.warn('Failed to save theme preference:', error));
+  chrome.storage.local.set({ [THEME_STORAGE_KEY]: colorScheme }, () => {
+    const error = chrome.runtime.lastError;
+    if (error) console.warn('Failed to save theme preference:', error);
+  });
 }

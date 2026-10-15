@@ -790,6 +790,7 @@ const WebSocketPanel = () => {
                 <MessageDetails
                   connection={selectedConnection}
                   selectedConnectionId={selectedConnectionId} // 传递连接ID用于详情面板重新渲染
+                  connectionIds={connectionsMap}
                   onSimulateMessage={handleSimulateMessage}
                   onClearMessages={handleClearMessages}
                   onOpenSimulatePanel={handleOpenSimulatePanel}

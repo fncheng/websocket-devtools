@@ -82,7 +82,7 @@ test("candidate paths round-trip for root, dots, Unicode, arrays, and empty keys
   for (const path of paths) assert.equal(extract(source, path).status, "matched");
 });
 
-test("candidate traversal observes message, node, and candidate budgets without wide-object expansion", () => {
+test("candidate traversal stops at maxNodes without wide-object expansion", () => {
   let reads = 0;
   const wide = {};
   for (let index = 0; index < 100; index += 1) {
@@ -91,6 +91,39 @@ test("candidate traversal observes message, node, and candidate budgets without 
   const candidates = collectFieldCandidates([message(wide)], { maxMessages: 1, maxNodes: 7, maxCandidates: 200 });
   assert.equal(candidates.length, 7);
   assert.equal(reads, 7);
+});
+
+test("candidate traversal stops after maxMessages", () => {
+  let excludedMessageReads = 0;
+  const excludedMessage = {};
+  Object.defineProperty(excludedMessage, "third", {
+    enumerable: true,
+    get() {
+      excludedMessageReads += 1;
+      return "third";
+    },
+  });
+  const candidates = collectFieldCandidates([
+    message({ first: "first" }),
+    message({ second: "second" }),
+    message(excludedMessage),
+  ], { maxMessages: 2, maxNodes: 10, maxCandidates: 10 });
+
+  assert.deepEqual(candidates.map((candidate) => candidate.path), ["first", "second"]);
+  assert.equal(excludedMessageReads, 0);
+});
+
+test("candidate traversal stops at maxCandidates without reading remaining fields", () => {
+  let reads = 0;
+  const wide = {};
+  for (let index = 0; index < 100; index += 1) {
+    Object.defineProperty(wide, `key${index}`, { enumerable: true, get() { reads += 1; return index; } });
+  }
+
+  const candidates = collectFieldCandidates([message(wide)], { maxMessages: 1, maxNodes: 100, maxCandidates: 3 });
+
+  assert.equal(candidates.length, 3);
+  assert.equal(reads, 3);
 });
 
 test("projection keeps original groups, hides empty or missing rows, and keyboard order follows expanded rows", () => {
@@ -135,6 +168,16 @@ test("projection keeps original groups, hides empty or missing rows, and keyboar
     createMessageProjectionCache()
   );
   assert.deepEqual(getVisibleProjectedMessages(allRows, {}).map((source) => source.messageId), [
+    "a-first", "a-empty", "b-missing", "b-second",
+  ]);
+
+  const clearedProjection = buildProjectedSections(
+    sections,
+    { ...config, mode: "raw", path: "" },
+    undefined,
+    createMessageProjectionCache()
+  );
+  assert.deepEqual(getVisibleProjectedMessages(clearedProjection, {}).map((source) => source.messageId), [
     "a-first", "a-empty", "b-missing", "b-second",
   ]);
 });

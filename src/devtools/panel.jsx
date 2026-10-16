@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createRoot } from "react-dom/client";
 import { MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
@@ -21,6 +21,20 @@ const MAX_MESSAGES_PER_CONNECTION = 5000; // Max messages retained per connectio
 const MAX_TOTAL_MESSAGES = 20000; // Max total messages across all connections
 const MAX_PROCESSED_IDS = 50000; // Max processed message IDs to retain
 
+/**
+ * Connection details change for every message, while membership changes only when a connection is added or cleared.
+ * @param {Map<unknown, unknown>} previousConnections
+ * @param {Map<unknown, unknown>} nextConnections
+ * @returns {boolean}
+ */
+const hasSameConnectionIds = (previousConnections, nextConnections) => {
+  if (previousConnections.size !== nextConnections.size) return false;
+  for (const connectionId of previousConnections.keys()) {
+    if (!nextConnections.has(connectionId)) return false;
+  }
+  return true;
+};
+
 const WebSocketPanel = () => {
   const colorScheme = useTheme();
   const [isMonitoring, setIsMonitoring] = useState(true);
@@ -37,7 +51,26 @@ const WebSocketPanel = () => {
   const [circuitBreakerRate, setCircuitBreakerRate] = useState(0);
 
   // Separate connection management and message management
-  const [connectionsMap, setConnectionsMap] = useState(new Map()); // Basic info for all connections (including active and inactive)
+  const [connections, setConnections] = useState(() => ({
+    map: new Map(),
+    ids: new Set(),
+  }));
+  const connectionsMap = connections.map; // Basic info for all connections (including active and inactive)
+  const connectionIds = connections.ids;
+
+  // Keep the membership Set reference stable when only connection metadata changes.
+  const setConnectionsMap = useCallback((updateConnections) => {
+    setConnections((previousConnections) => {
+      const nextConnections = typeof updateConnections === "function"
+        ? updateConnections(previousConnections.map)
+        : updateConnections;
+      const ids = hasSameConnectionIds(previousConnections.map, nextConnections)
+        ? previousConnections.ids
+        : new Set(nextConnections.keys());
+
+      return { map: nextConnections, ids };
+    });
+  }, []);
 
   // Message deduplication mechanism
   const processedMessageIds = useRef(new Set());
@@ -790,7 +823,7 @@ const WebSocketPanel = () => {
                 <MessageDetails
                   connection={selectedConnection}
                   selectedConnectionId={selectedConnectionId} // 传递连接ID用于详情面板重新渲染
-                  connectionIds={connectionsMap}
+                  connectionIds={connectionIds}
                   onSimulateMessage={handleSimulateMessage}
                   onClearMessages={handleClearMessages}
                   onOpenSimulatePanel={handleOpenSimulatePanel}

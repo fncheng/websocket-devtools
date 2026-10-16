@@ -7,6 +7,7 @@ import {
   extractMessageField,
   getProjectedMessages,
   getVisibleProjectedMessages,
+  formatProjectionPath,
   parseProjectionPath,
 } from "../src/utils/messageProjection.js";
 import { filterMessages } from "../src/utils/filterUtils.js";
@@ -32,6 +33,11 @@ test("parses exact dotted, indexed, quoted, and root candidate paths", () => {
   assert.equal(parseProjectionPath('payload[*]').ok, false);
   assert.equal(parseProjectionPath('a[01]').ok, false);
   assert.equal(parseProjectionPath('a[9007199254740993]').ok, false);
+});
+
+test("formats projection tokens with the exact parser-compatible grammar", () => {
+  assert.equal(formatProjectionPath(["payload", 0, "value"]), "payload[0].value");
+  assert.equal(formatProjectionPath(["中文", "a.b", ""]), '["中文"]["a.b"][""]');
 });
 
 test("extracts values exactly and preserves false, zero, null, empty, and whitespace", () => {

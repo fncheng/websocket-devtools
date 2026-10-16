@@ -225,19 +225,6 @@ export const formatProjectedValue = (value) => {
   return { text: String(value), valueType: typeof value, isEmptyString: false, isWhitespaceOnly: false };
 };
 
-/**
- * Format exact path tokens with the grammar accepted by parseProjectionPath.
- * @param {ProjectionPathToken[]} tokens
- * @returns {string}
- */
-export const formatProjectionPath = (tokens) => tokens.reduce((path, token) => {
-  if (typeof token === "number") return `${path}[${token}]`;
-  const property = IDENTIFIER_START.test(token[0] || "") && [...token].every((character) => IDENTIFIER_PART.test(character));
-  return property
-    ? (path ? `${path}.${token}` : token)
-    : `${path}[${JSON.stringify(token)}]`;
-}, "");
-
 const appendPath = (basePath, key, isIndex) => {
   if (isIndex) return `${basePath}[${key}]`;
   const property = IDENTIFIER_START.test(key[0] || "") && [...key].every((character) => IDENTIFIER_PART.test(character));
@@ -245,6 +232,16 @@ const appendPath = (basePath, key, isIndex) => {
     ? (basePath ? `${basePath}.${key}` : key)
     : `${basePath}[${JSON.stringify(key)}]`;
 };
+
+/**
+ * Format exact path tokens with the grammar accepted by parseProjectionPath.
+ * @param {ProjectionPathToken[]} tokens
+ * @returns {string}
+ */
+export const formatProjectionPath = (tokens) => tokens.reduce(
+  (path, token) => appendPath(path, String(token), typeof token === "number"),
+  ""
+);
 
 /**
  * Collect scalar leaf candidates using bounded traversal. It never materializes a full key list.

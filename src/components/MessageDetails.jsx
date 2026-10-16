@@ -25,6 +25,7 @@ import MessageProjectionValue from "./MessageProjectionValue.jsx";
 import {
   createMessageProjectionCache,
   buildProjectedSections,
+  getKeyboardNavigationTarget,
   getProjectedMessages,
   getVisibleProjectedMessages,
   parseProjectionPath,
@@ -270,22 +271,15 @@ const MessageDetails = ({
       if ((isTableFocused || hasSelectedMessage) && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
         e.preventDefault();
         
-        const currentIndex = selectedMessageKey 
-          ? visibleMessages.findIndex(msg => msg.messageId === selectedMessageKey)
-          : -1;
-        
-        let newIndex;
-        if (currentIndex === -1) {
-          // No message selected, select first message
-          newIndex = 0;
-        } else if (e.key === 'ArrowUp') {
-          newIndex = currentIndex > 0 ? currentIndex - 1 : currentIndex;
-        } else {
-          newIndex = currentIndex < visibleMessages.length - 1 ? currentIndex + 1 : currentIndex;
-        }
-        
-        if (newIndex >= 0 && newIndex < visibleMessages.length) {
-          const newMessageKey = visibleMessages[newIndex].messageId;
+        const targetMessage = getKeyboardNavigationTarget(
+          projectedMessages,
+          visibleMessages,
+          selectedMessageKey,
+          e.key === 'ArrowUp' ? "up" : "down"
+        );
+
+        if (targetMessage) {
+          const newMessageKey = targetMessage.messageId;
           setSelectedMessageKey(newMessageKey);
           
           // Scroll the selected row into view
@@ -316,7 +310,7 @@ const MessageDetails = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [visibleMessages, selectedMessageKey]);
+  }, [projectedMessages, visibleMessages, selectedMessageKey]);
 
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp);

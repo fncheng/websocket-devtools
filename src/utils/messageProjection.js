@@ -355,3 +355,47 @@ export const getVisibleProjectedMessages = (projectedSections, collapsedGroups) 
       : section.projectedMessages.map(({ message }) => message)
   ))
 );
+
+/**
+ * Resolve the next keyboard selection from the full projected order while only landing on rendered rows.
+ * A selected row may remain in the detail panel after its group is collapsed, so it is not necessarily
+ * present in `visibleMessages`.
+ * @param {Array<{ messageId: string }>} projectedMessages
+ * @param {Array<{ messageId: string }>} visibleMessages
+ * @param {string | null} selectedMessageKey
+ * @param {"up" | "down"} direction
+ * @returns {{ messageId: string } | null}
+ */
+export const getKeyboardNavigationTarget = (
+  projectedMessages,
+  visibleMessages,
+  selectedMessageKey,
+  direction
+) => {
+  if (visibleMessages.length === 0) return null;
+  if (!selectedMessageKey) return visibleMessages[0];
+
+  const visibleIndex = visibleMessages.findIndex((message) => message.messageId === selectedMessageKey);
+  if (visibleIndex >= 0) {
+    const nextIndex = direction === "up"
+      ? Math.max(visibleIndex - 1, 0)
+      : Math.min(visibleIndex + 1, visibleMessages.length - 1);
+    return visibleMessages[nextIndex];
+  }
+
+  const projectedIndex = projectedMessages.findIndex((message) => message.messageId === selectedMessageKey);
+  if (projectedIndex < 0) return visibleMessages[0];
+
+  const visibleMessageIds = new Set(visibleMessages.map((message) => message.messageId));
+  const step = direction === "up" ? -1 : 1;
+  for (
+    let index = projectedIndex + step;
+    index >= 0 && index < projectedMessages.length;
+    index += step
+  ) {
+    if (visibleMessageIds.has(projectedMessages[index].messageId)) return projectedMessages[index];
+  }
+
+  // Preserve the hidden selection when there is no rendered row in the requested direction.
+  return projectedMessages[projectedIndex];
+};

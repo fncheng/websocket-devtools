@@ -5,8 +5,11 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import { useTheme } from "../hooks/useTheme.js";
 import { EditorView } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
+import { ensureSyntaxTree } from "@codemirror/language";
 import { search, openSearchPanel } from "@codemirror/search";
 import Protobuf from "../Icons/Protobuf";
+import JsonContextMenu from "./JsonContextMenu.jsx";
+import { getJsonContextTarget, getJsonPointerPosition, isCompleteJsonSyntaxTree } from "../utils/jsonContextTarget.js";
 
 const deepEqual = (a, b) => {
   if (a === b) return true;
@@ -65,6 +68,7 @@ const JsonViewer = ({
   showNestedParseButton = true, // Control existing nested parse button
   showSimulateNestedParseButton = false, // Control button specifically for Simulate Message
   onSimulateNestedParse = null, // Callback for Simulate Message specific nested parse
+  enableJsonContextMenu = false,
 }) => {
   const colorScheme = useTheme();
   // Set initial wrap value based on content type: JSON defaults to no wrap, non-JSON defaults to wrap
@@ -460,6 +464,65 @@ const JsonViewer = ({
   // References for programmatic actions (search) and focus-scoped shortcut handling
   const cmRef = useRef(null);
   const rootRef = useRef(null);
+  const [contextMenuState, setContextMenuState] = useState(null);
+  const contextMenuSequence = useRef(0);
+
+  const closeContextMenu = useCallback(() => {
+    setContextMenuState(null);
+    cmRef.current?.view?.focus();
+  }, []);
+
+  useEffect(() => {
+    setContextMenuState(null);
+  }, [content, message]);
+
+  useEffect(() => {
+    if (!contextMenuState) return undefined;
+    const view = cmRef.current?.view;
+    const closeForViewportChange = () => closeContextMenu();
+    view?.scrollDOM.addEventListener("scroll", closeForViewportChange);
+    document.addEventListener("scroll", closeForViewportChange, true);
+    window.addEventListener("resize", closeForViewportChange);
+    return () => {
+      view?.scrollDOM.removeEventListener("scroll", closeForViewportChange);
+      document.removeEventListener("scroll", closeForViewportChange, true);
+      window.removeEventListener("resize", closeForViewportChange);
+    };
+  }, [contextMenuState, closeContextMenu]);
+
+  const handleJsonContextMenu = useCallback((event, view) => {
+    if (!readOnly || !enableJsonContextMenu) return false;
+    if (!view.contentDOM.contains(event.target)) return false;
+    if (event.target instanceof Element && event.target.closest(".cm-foldPlaceholder")) return false;
+    const isKeyboardInvocation = event.clientX === 0 && event.clientY === 0;
+    const cursorPosition = view.state.selection.main.head;
+    const cursorRect = isKeyboardInvocation ? view.coordsAtPos(cursorPosition) : null;
+    const coordinates = isKeyboardInvocation
+      ? { x: cursorRect?.left ?? 0, y: cursorRect?.bottom ?? 0 }
+      : { x: event.clientX, y: event.clientY };
+    const position = isKeyboardInvocation
+      ? cursorPosition
+      : getJsonPointerPosition(view, coordinates.x, coordinates.y);
+    if (position === null) return false;
+
+    const tree = ensureSyntaxTree(view.state, view.state.doc.length, 20);
+    if (!tree || !isCompleteJsonSyntaxTree(tree, view.state.doc.length)) return false;
+    const target = getJsonContextTarget(tree, view.state.doc.toString(), position);
+    if (!target) return false;
+
+    event.preventDefault();
+    event.stopPropagation();
+    const selection = view.state.selection.main;
+    setContextMenuState({
+      id: ++contextMenuSequence.current,
+      document: view.state.doc,
+      target,
+      selection: { from: selection.from, to: selection.to },
+      x: coordinates.x,
+      y: coordinates.y,
+    });
+    return true;
+  }, [enableJsonContextMenu, readOnly]);
 
   // Open CodeMirror's native search panel (also reachable via Ctrl/Cmd+F)
   const handleOpenSearch = useCallback(() => {
@@ -537,6 +600,9 @@ const JsonViewer = ({
       },
     }),
     textWrap ? EditorView.lineWrapping : [],
+    readOnly && enableJsonContextMenu
+      ? EditorView.domEventHandlers({ contextmenu: handleJsonContextMenu })
+      : [],
     // Keep the view focusable even when read-only so it can hold a cursor and
     // Ctrl/Cmd+F search + text selection work; EditorState.readOnly blocks edits.
     EditorState.readOnly.of(readOnly),
@@ -731,6 +797,12 @@ const JsonViewer = ({
           className="json-viewer-codemirror"
         />
       </div>
+      <JsonContextMenu
+        key={contextMenuState?.id ?? "closed"}
+        state={contextMenuState}
+        getView={() => cmRef.current?.view ?? null}
+        onClose={closeContextMenu}
+      />
     </div>
   );
 };

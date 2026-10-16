@@ -864,6 +864,7 @@ const MessageDetails = ({
                               message={selectedMessage}
                               className="compact"
                               showControls={true}
+                              enableJsonContextMenu={true}
                               onCopy={(data) => handleCopyMessage(data, messageKey)}
                               copyButtonText="📋 Copy"
                               copiedText="✓ Copied"

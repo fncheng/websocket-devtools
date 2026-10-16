@@ -763,6 +763,34 @@
     "message": "Verschachtelte Analyse & Ausfüllen",
     "description": "Translation for jsonViewer.controls.simulateNestedParse"
   },
+  "jsonViewer_contextMenu_label": {
+    "message": "JSON-Kontextmenü",
+    "description": "Translation for jsonViewer.contextMenu.label"
+  },
+  "jsonViewer_contextMenu_copyValue": {
+    "message": "Wert kopieren",
+    "description": "Translation for jsonViewer.contextMenu.copyValue"
+  },
+  "jsonViewer_contextMenu_copyPath": {
+    "message": "Eigenschaftspfad kopieren",
+    "description": "Translation for jsonViewer.contextMenu.copyPath"
+  },
+  "jsonViewer_contextMenu_copySelection": {
+    "message": "Ausgewählten Text kopieren",
+    "description": "Translation for jsonViewer.contextMenu.copySelection"
+  },
+  "jsonViewer_contextMenu_pathHint": {
+    "message": "Der Pfad basiert auf der aktuellen Anzeige",
+    "description": "Translation for jsonViewer.contextMenu.pathHint"
+  },
+  "jsonViewer_contextMenu_copied": {
+    "message": "Kopiert",
+    "description": "Translation for jsonViewer.contextMenu.copied"
+  },
+  "jsonViewer_contextMenu_copyFailed": {
+    "message": "Kopieren nicht möglich",
+    "description": "Translation for jsonViewer.contextMenu.copyFailed"
+  },
   "messageDetails_emptyState_selectConnection": {
     "message": "Wählen Sie eine WebSocket-Verbindung aus, um Nachrichten anzuzeigen",
     "description": "Translation for messageDetails.emptyState.selectConnection"

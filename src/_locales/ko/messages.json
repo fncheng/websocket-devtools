@@ -771,6 +771,34 @@
     "message": "중첩 파싱 및 채우기",
     "description": "Translation for jsonViewer.controls.simulateNestedParse"
   },
+  "jsonViewer_contextMenu_label": {
+    "message": "JSON 컨텍스트 메뉴",
+    "description": "Translation for jsonViewer.contextMenu.label"
+  },
+  "jsonViewer_contextMenu_copyValue": {
+    "message": "값 복사",
+    "description": "Translation for jsonViewer.contextMenu.copyValue"
+  },
+  "jsonViewer_contextMenu_copyPath": {
+    "message": "속성 경로 복사",
+    "description": "Translation for jsonViewer.contextMenu.copyPath"
+  },
+  "jsonViewer_contextMenu_copySelection": {
+    "message": "선택한 텍스트 복사",
+    "description": "Translation for jsonViewer.contextMenu.copySelection"
+  },
+  "jsonViewer_contextMenu_pathHint": {
+    "message": "경로는 현재 표시 내용을 기준으로 합니다",
+    "description": "Translation for jsonViewer.contextMenu.pathHint"
+  },
+  "jsonViewer_contextMenu_copied": {
+    "message": "복사됨",
+    "description": "Translation for jsonViewer.contextMenu.copied"
+  },
+  "jsonViewer_contextMenu_copyFailed": {
+    "message": "복사할 수 없습니다",
+    "description": "Translation for jsonViewer.contextMenu.copyFailed"
+  },
   "messageDetails_emptyState_selectConnection": {
     "message": "메시지를 보려면 WebSocket 연결을 선택하세요",
     "description": "Translation for messageDetails.emptyState.selectConnection"

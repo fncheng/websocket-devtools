@@ -705,3 +705,65 @@
 .json-viewer-codemirror .cm-panel.cm-search [name="close"]:hover {
   color: var(--danger-color);
 }
+
+.json-context-menu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 190px;
+  padding: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--overlay-shadow, var(--shadow));
+  color: var(--text-primary);
+}
+
+.json-context-menu button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.json-context-menu button:hover,
+.json-context-menu button:focus-visible {
+  background: var(--accent-transparent-color);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.json-context-menu button:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.json-context-menu button:disabled:hover {
+  background: transparent;
+}
+
+.json-context-menu-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 3px 5px 1px;
+  padding-top: 5px;
+  border-top: 1px solid var(--border-color);
+  font-size: 11px;
+}
+
+.json-context-menu-status-success {
+  color: var(--success-color);
+}
+
+.json-context-menu-status-error {
+  color: var(--danger-color);
+}

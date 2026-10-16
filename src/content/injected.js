@@ -1450,7 +1450,7 @@
   };
 
   // New: Active keep-alive from page context
-  const keepAliveInterval = setInterval(() => {
+  setInterval(() => {
     try {
       // Send keep-alive to content script
       window.postMessage({
@@ -1462,18 +1462,4 @@
       // Ignore errors
     }
   }, 15000); // Every 15 seconds
-
-  // Clean up interval when page is unloaded
-  window.addEventListener('beforeunload', () => {
-    if (keepAliveInterval) {
-      clearInterval(keepAliveInterval);
-    }
-  });
-
-  // Also clean up when the script context is destroyed
-  window.addEventListener('unload', () => {
-    if (keepAliveInterval) {
-      clearInterval(keepAliveInterval);
-    }
-  });
 })();

@@ -7,6 +7,9 @@ import WebSocketList from "../components/WebSocketList.jsx";
 import MessageDetails from "../components/MessageDetails.jsx";
 import FloatingSimulate from "../components/FloatingSimulate.jsx";
 import LanguageSelector from "../components/LanguageSelector.jsx";
+import ThemeToggle from "../components/ThemeToggle.jsx";
+import { useTheme } from "../hooks/useTheme.js";
+import { initializeTheme } from "../utils/theme.js";
 import ExtensionIcon from "../Icons/ExtensionIcon.jsx";
 import { t, addLanguageChangeListener, getCurrentLanguage, initForPanel } from "../utils/i18n.js";
 import i18n from "../utils/i18n.js";
@@ -19,6 +22,7 @@ const MAX_TOTAL_MESSAGES = 20000; // Max total messages across all connections
 const MAX_PROCESSED_IDS = 50000; // Max processed message IDs to retain
 
 const WebSocketPanel = () => {
+  const colorScheme = useTheme();
   const [isMonitoring, setIsMonitoring] = useState(true);
   const [blockStatus, setBlockStatus] = useState({
     send: false,
@@ -674,8 +678,9 @@ const WebSocketPanel = () => {
   // Show loading while i18n initializes
 
 
+  // Keep Mantine components aligned with the extension-wide preference.
   return (
-    <MantineProvider>
+    <MantineProvider forceColorScheme={colorScheme}>
       <div className="websocket-panel">
         <div className="panel-header">
           <div className="panel-header-left">
@@ -693,6 +698,7 @@ const WebSocketPanel = () => {
             )}
           </div>
           <div className="panel-status">
+            <ThemeToggle />
             <LanguageSelector />
             <button 
               className="extension-icon-panel"
@@ -784,6 +790,7 @@ const WebSocketPanel = () => {
                 <MessageDetails
                   connection={selectedConnection}
                   selectedConnectionId={selectedConnectionId} // 传递连接ID用于详情面板重新渲染
+                  connectionIds={connectionsMap}
                   onSimulateMessage={handleSimulateMessage}
                   onClearMessages={handleClearMessages}
                   onOpenSimulatePanel={handleOpenSimulatePanel}
@@ -808,4 +815,4 @@ const WebSocketPanel = () => {
 // 渲染到 DOM
 const container = document.getElementById("root");
 const root = createRoot(container);
-root.render(<WebSocketPanel />);
+initializeTheme().then(() => root.render(<WebSocketPanel />));

@@ -12,7 +12,7 @@ the build is Vite via `vite-plugin-web-extension`.
 ## Commands
 
 ```bash
-pnpm install            # install deps (packageManager: pnpm@10.5.2, node >=16)
+pnpm install            # install deps (packageManager: pnpm@10.5.2, Node ^20.19.0 || >=22.12.0)
 pnpm dev                # regenerate locales + vite build --watch (development, unminified, sourcemaps)
 pnpm build              # clean + regenerate locales + production build → dist/
 pnpm build:dev          # one-off development build (no watch)
@@ -20,9 +20,9 @@ pnpm i18n               # regenerate Chrome _locales from src/assets/locales (ru
 pnpm clean              # rm -rf dist
 ```
 
-There is no test runner or linter configured. Load the unpacked extension from `dist/`
-in `chrome://extensions` (Developer mode) to run it. Do NOT run build commands unless the
-user explicitly asks — the build is the only way to exercise the code, so confirm first.
+Run `pnpm test` (`node --test`) for the unit suite; no linter is configured. For manual
+verification, load the unpacked extension from `dist/` in `chrome://extensions` (Developer
+mode). Avoid build commands unless the user asks.
 
 ## Architecture: the four-layer message pipeline
 

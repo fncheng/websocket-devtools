@@ -4,6 +4,7 @@ import { json } from "@codemirror/lang-json";
 import {
   getJsonContextCopyValue,
   getJsonContextPath,
+  getJsonKeyboardContextPosition,
   getJsonPointerPosition,
   getJsonContextTarget,
   isCompleteJsonSyntaxTree,
@@ -115,6 +116,16 @@ test("normalizes a pointer from the nearest insertion point to an actual charact
   assert.equal(getJsonPointerPosition(view, 26, 10), 2);
   assert.equal(getJsonPointerPosition(view, 35, 10), null);
   assert.deepEqual(calls.slice(0, 2), [[2, 1], [3, -1]]);
+});
+
+test("normalizes keyboard invocation at EOF to the preceding non-whitespace character", () => {
+  const source = '{"value":true}\n  ';
+  const position = getJsonKeyboardContextPosition(source, source.length);
+
+  assert.equal(position, source.lastIndexOf("}"));
+  assert.equal(getJsonContextTarget(parse(source), source, position)?.isRoot, true);
+  assert.equal(getJsonKeyboardContextPosition(source, 1), 1);
+  assert.equal(getJsonKeyboardContextPosition("   ", 3), null);
 });
 
 test("uses opposite cursor sides to keep a soft-wrapped final character on its visual line", () => {

@@ -127,6 +127,26 @@ export const getJsonPointerPosition = (view, x, y) => {
 };
 
 /**
+ * Convert a keyboard cursor position at EOF into the final JSON character.
+ * CodeMirror represents EOF as an insertion point at `documentText.length`,
+ * while context targets must resolve an actual character offset.
+ * @param {string} documentText
+ * @param {number} cursorPosition
+ * @returns {number | null}
+ */
+export const getJsonKeyboardContextPosition = (documentText, cursorPosition) => {
+  if (!Number.isInteger(cursorPosition) || cursorPosition < 0 || cursorPosition > documentText.length) {
+    return null;
+  }
+  if (cursorPosition < documentText.length) return cursorPosition;
+
+  for (let position = documentText.length - 1; position >= 0; position -= 1) {
+    if (!/\s/u.test(documentText[position])) return position;
+  }
+  return null;
+};
+
+/**
  * Resolve the JSON value associated with an exact document offset.
  * @param {JsonSyntaxTree} tree
  * @param {string} documentText

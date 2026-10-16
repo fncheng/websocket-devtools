@@ -9,7 +9,12 @@ import { ensureSyntaxTree } from "@codemirror/language";
 import { search, openSearchPanel } from "@codemirror/search";
 import Protobuf from "../Icons/Protobuf";
 import JsonContextMenu from "./JsonContextMenu.jsx";
-import { getJsonContextTarget, getJsonPointerPosition, isCompleteJsonSyntaxTree } from "../utils/jsonContextTarget.js";
+import {
+  getJsonContextTarget,
+  getJsonKeyboardContextPosition,
+  getJsonPointerPosition,
+  isCompleteJsonSyntaxTree,
+} from "../utils/jsonContextTarget.js";
 
 const deepEqual = (a, b) => {
   if (a === b) return true;
@@ -500,14 +505,15 @@ const JsonViewer = ({
     const coordinates = isKeyboardInvocation
       ? { x: cursorRect?.left ?? 0, y: cursorRect?.bottom ?? 0 }
       : { x: event.clientX, y: event.clientY };
+    const documentText = view.state.doc.toString();
     const position = isKeyboardInvocation
-      ? cursorPosition
+      ? getJsonKeyboardContextPosition(documentText, cursorPosition)
       : getJsonPointerPosition(view, coordinates.x, coordinates.y);
     if (position === null) return false;
 
     const tree = ensureSyntaxTree(view.state, view.state.doc.length, 20);
     if (!tree || !isCompleteJsonSyntaxTree(tree, view.state.doc.length)) return false;
-    const target = getJsonContextTarget(tree, view.state.doc.toString(), position);
+    const target = getJsonContextTarget(tree, documentText, position);
     if (!target) return false;
 
     event.preventDefault();

@@ -29,7 +29,10 @@ test('Chrome locale catalogs include every theme toggle label', () => {
 
     for (const key of themeKeys) {
       const chromeKey = key.replace(/\./g, '_');
-      assert.equal(catalog[chromeKey]?.message, translations[key], `${chromeLocale} must include ${chromeKey}`);
+      const translation = translations[key];
+      assert.equal(typeof translation, 'string', `${flatLocale} must include ${key}`);
+      assert.ok(translation.trim(), `${flatLocale} must provide a non-empty ${key}`);
+      assert.equal(catalog[chromeKey]?.message, translation, `${chromeLocale} must include ${chromeKey}`);
     }
   }
 });

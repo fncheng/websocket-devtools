@@ -67,7 +67,7 @@ test("does not report success when clipboard and fallback copying both fail", as
 test("uses a true fallback result when the asynchronous clipboard API is unavailable", async () => {
   let fallbackCalls = 0;
   await withClipboardEnvironment({
-    writeText: async () => { throw new Error("clipboard denied"); },
+    writeText: undefined,
     execCommand: () => { fallbackCalls += 1; return true; },
   }, async () => {
     assert.equal(await copyTextToClipboard("value"), true);

@@ -8,6 +8,9 @@ export default defineConfig(({ mode }) => ({
     react(),
     webExtension({
       manifest: "./src/manifest.json",
+      // The plugin fetches a remote SchemaStore document during validation.
+      // Chrome still validates the generated manifest when the extension is loaded.
+      skipManifestValidation: true,
       watchFilePaths: ["src/**/*"],
       additionalInputs: [
         "src/content/injected.js",

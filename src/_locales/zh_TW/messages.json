@@ -755,6 +755,34 @@
     "message": "巢狀解析並填充",
     "description": "Translation for jsonViewer.controls.simulateNestedParse"
   },
+  "jsonViewer_contextMenu_label": {
+    "message": "JSON 右鍵選單",
+    "description": "Translation for jsonViewer.contextMenu.label"
+  },
+  "jsonViewer_contextMenu_copyValue": {
+    "message": "複製值",
+    "description": "Translation for jsonViewer.contextMenu.copyValue"
+  },
+  "jsonViewer_contextMenu_copyPath": {
+    "message": "複製屬性路徑",
+    "description": "Translation for jsonViewer.contextMenu.copyPath"
+  },
+  "jsonViewer_contextMenu_copySelection": {
+    "message": "複製選取文字",
+    "description": "Translation for jsonViewer.contextMenu.copySelection"
+  },
+  "jsonViewer_contextMenu_pathHint": {
+    "message": "路徑以目前顯示內容為準",
+    "description": "Translation for jsonViewer.contextMenu.pathHint"
+  },
+  "jsonViewer_contextMenu_copied": {
+    "message": "已複製",
+    "description": "Translation for jsonViewer.contextMenu.copied"
+  },
+  "jsonViewer_contextMenu_copyFailed": {
+    "message": "無法複製",
+    "description": "Translation for jsonViewer.contextMenu.copyFailed"
+  },
   "messageDetails_emptyState_selectConnection": {
     "message": "選擇一個 WebSocket 連線以檢視訊息",
     "description": "Translation for messageDetails.emptyState.selectConnection"

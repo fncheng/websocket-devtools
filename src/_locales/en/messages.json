@@ -771,6 +771,34 @@
     "message": "Nested Parse & Fill",
     "description": "Translation for jsonViewer.controls.simulateNestedParse"
   },
+  "jsonViewer_contextMenu_label": {
+    "message": "JSON context menu",
+    "description": "Translation for jsonViewer.contextMenu.label"
+  },
+  "jsonViewer_contextMenu_copyValue": {
+    "message": "Copy value",
+    "description": "Translation for jsonViewer.contextMenu.copyValue"
+  },
+  "jsonViewer_contextMenu_copyPath": {
+    "message": "Copy property path",
+    "description": "Translation for jsonViewer.contextMenu.copyPath"
+  },
+  "jsonViewer_contextMenu_copySelection": {
+    "message": "Copy selected text",
+    "description": "Translation for jsonViewer.contextMenu.copySelection"
+  },
+  "jsonViewer_contextMenu_pathHint": {
+    "message": "Path is based on the current display",
+    "description": "Translation for jsonViewer.contextMenu.pathHint"
+  },
+  "jsonViewer_contextMenu_copied": {
+    "message": "Copied",
+    "description": "Translation for jsonViewer.contextMenu.copied"
+  },
+  "jsonViewer_contextMenu_copyFailed": {
+    "message": "Unable to copy",
+    "description": "Translation for jsonViewer.contextMenu.copyFailed"
+  },
   "messageDetails_emptyState_selectConnection": {
     "message": "Select a WebSocket connection to view messages",
     "description": "Translation for messageDetails.emptyState.selectConnection"

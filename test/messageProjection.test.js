@@ -5,8 +5,10 @@ import {
   collectFieldCandidates,
   createMessageProjectionCache,
   extractMessageField,
+  getKeyboardNavigationTarget,
   getProjectedMessages,
   getVisibleProjectedMessages,
+  formatProjectionPath,
   parseProjectionPath,
 } from "../src/utils/messageProjection.js";
 import { filterMessages } from "../src/utils/filterUtils.js";
@@ -32,6 +34,11 @@ test("parses exact dotted, indexed, quoted, and root candidate paths", () => {
   assert.equal(parseProjectionPath('payload[*]').ok, false);
   assert.equal(parseProjectionPath('a[01]').ok, false);
   assert.equal(parseProjectionPath('a[9007199254740993]').ok, false);
+});
+
+test("formats projection tokens with the exact parser-compatible grammar", () => {
+  assert.equal(formatProjectionPath(["payload", 0, "value"]), "payload[0].value");
+  assert.equal(formatProjectionPath(["中文", "a.b", ""]), '["中文"]["a.b"][""]');
 });
 
 test("extracts values exactly and preserves false, zero, null, empty, and whitespace", () => {
@@ -197,6 +204,33 @@ test("projection keeps original groups, hides empty or missing rows, and keyboar
   assert.deepEqual(getVisibleProjectedMessages(clearedProjection, {}).map((source) => source.messageId), [
     "a-first", "a-empty", "b-missing", "b-second",
   ]);
+});
+
+test("keyboard navigation leaves a collapsed selected row toward the nearest visible row", () => {
+  const projectedMessages = [
+    { messageId: "before" },
+    { messageId: "hidden-first" },
+    { messageId: "hidden-second" },
+    { messageId: "after" },
+  ];
+  const visibleMessages = [projectedMessages[0], projectedMessages[3]];
+
+  assert.equal(
+    getKeyboardNavigationTarget(projectedMessages, visibleMessages, "hidden-second", "up")?.messageId,
+    "before"
+  );
+  assert.equal(
+    getKeyboardNavigationTarget(projectedMessages, visibleMessages, "hidden-second", "down")?.messageId,
+    "after"
+  );
+  assert.equal(
+    getKeyboardNavigationTarget(projectedMessages, visibleMessages, "hidden-first", "up")?.messageId,
+    "before"
+  );
+  assert.equal(
+    getKeyboardNavigationTarget(projectedMessages, visibleMessages, "after", "down")?.messageId,
+    "after"
+  );
 });
 
 test("original filtering and grouping precede projected visibility", () => {

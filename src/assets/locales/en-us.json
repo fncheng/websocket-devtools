@@ -318,5 +318,15 @@
   "messageDetails.projection.expand": "Expand",
   "messageDetails.projection.collapse": "Collapse",
   "messageDetails.projection.searchRawTooltip": "Searches raw message data",
-  "messageDetails.projection.lengthTooltip": "Original message character length"
+  "messageDetails.projection.lengthTooltip": "Original message character length",
+  "sse.readOnly": "Read-only",
+  "sse.truncated": "Observation truncated",
+  "sse.historyTruncated": "Older SSE history was discarded",
+  "sse.reason.byte-limit": "Byte limit",
+  "sse.reason.event-limit": "Event limit",
+  "sse.reason.buffer-limit": "Buffer limit",
+  "sse.reason.time-limit": "Time limit",
+  "sse.reason.monitoring-paused": "Monitoring paused",
+  "sse.reason.parser-error": "Parser error",
+  "sse.reason.response-wrapper-error": "Response wrapper unavailable"
 }

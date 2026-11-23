@@ -129,15 +129,20 @@ const WebSocketPanel = () => {
             // Update connection info
             const newConnectionsMap = new Map();
             tabEvents.forEach((eventData) => {
+              if (eventData.protocol === "sse" && !newConnectionsMap.has(eventData.id) && !["connection", "open"].includes(eventData.type)) {
+                newConnectionsMap.set(eventData.id, { ...eventData, status: eventData.status || "open", lastActivity: eventData.timestamp });
+              }
               if (
                 eventData.type === "connection" ||
                 eventData.type === "open"
               ) {
                 newConnectionsMap.set(eventData.id, {
+                  ...newConnectionsMap.get(eventData.id),
+                  ...eventData,
                   id: eventData.id,
                   url: eventData.url,
                   status:
-                    eventData.type === "connection" ? "connecting" : "open",
+                    eventData.status || (eventData.type === "connection" ? "connecting" : "open"),
                   timestamp: eventData.timestamp,
                   lastActivity: eventData.timestamp,
                   frameContext: eventData.frameContext, // Preserve iframe context information
@@ -148,20 +153,24 @@ const WebSocketPanel = () => {
               ) {
                 const existing = newConnectionsMap.get(eventData.id);
                 newConnectionsMap.set(eventData.id, {
+                  ...existing,
+                  ...eventData,
                   id: eventData.id,
                   url: existing?.url || eventData.url || "Unknown URL",
-                  status: eventData.type,
+                  status: eventData.status || eventData.type,
                   timestamp: existing?.timestamp || eventData.timestamp,
                   lastActivity: eventData.timestamp,
                   frameContext: existing?.frameContext || eventData.frameContext, // Preserve iframe context information
                 });
               } else if (eventData.type === "message") {
                 const existing = newConnectionsMap.get(eventData.id);
-                if (existing) {
+                if (existing || eventData.protocol === "sse") {
                   newConnectionsMap.set(eventData.id, {
+                    ...eventData,
                     ...existing,
+                    status: existing?.status || "open",
                     lastActivity: eventData.timestamp,
-                    frameContext: existing.frameContext || eventData.frameContext, // Preserve iframe context information
+                    frameContext: existing?.frameContext || eventData.frameContext, // Preserve iframe context information
                   });
                 }
               }
@@ -214,6 +223,9 @@ const WebSocketPanel = () => {
           let newConnectionIdToSelect = null;
 
           validEvents.forEach(eventData => {
+            if (eventData.protocol === "sse" && !newConnections.has(eventData.id) && !["connection", "open"].includes(eventData.type)) {
+              newConnections.set(eventData.id, { ...eventData, status: eventData.status || "open", lastActivity: eventData.timestamp });
+            }
             // Handle manual connection creation success event
             if (eventData.type === "manual-connection-created") {
                newConnectionIdToSelect = eventData.connectionId;
@@ -222,9 +234,11 @@ const WebSocketPanel = () => {
             if (eventData.type === "connection" || eventData.type === "open") {
               // Create or update connection to active status
               newConnections.set(eventData.id, {
+                ...newConnections.get(eventData.id),
+                ...eventData,
                 id: eventData.id,
                 url: eventData.url,
-                status: eventData.type === "connection" ? "connecting" : "open",
+                status: eventData.status || (eventData.type === "connection" ? "connecting" : "open"),
                 timestamp: eventData.timestamp,
                 lastActivity: eventData.timestamp,
                 frameContext: eventData.frameContext,
@@ -238,9 +252,11 @@ const WebSocketPanel = () => {
               // Update connection to inactive status
               const existing = newConnections.get(eventData.id);
               newConnections.set(eventData.id, {
+                ...existing,
+                ...eventData,
                 id: eventData.id,
                 url: existing?.url || eventData.url || "Unknown URL",
-                status: eventData.type,
+                status: eventData.status || eventData.type,
                 timestamp: existing?.timestamp || eventData.timestamp,
                 lastActivity: eventData.timestamp,
                 frameContext: existing?.frameContext || eventData.frameContext,
@@ -248,11 +264,13 @@ const WebSocketPanel = () => {
             } else if (eventData.type === "message") {
               // Update last activity
               const existing = newConnections.get(eventData.id);
-              if (existing) {
+              if (existing || eventData.protocol === "sse") {
                 newConnections.set(eventData.id, {
+                  ...eventData,
                   ...existing,
+                  status: existing?.status || "open",
                   lastActivity: eventData.timestamp,
-                  frameContext: existing.frameContext || eventData.frameContext,
+                  frameContext: existing?.frameContext || eventData.frameContext,
                 });
               }
             }
@@ -341,13 +359,18 @@ const WebSocketPanel = () => {
         setConnectionsMap((prevConnections) => {
           const newConnections = new Map(prevConnections);
           const hadConnections = prevConnections.size > 0;
+          if (eventData.protocol === "sse" && !newConnections.has(eventData.id) && !["connection", "open"].includes(eventData.type)) {
+            newConnections.set(eventData.id, { ...eventData, status: eventData.status || "open", lastActivity: eventData.timestamp });
+          }
 
           if (eventData.type === "connection" || eventData.type === "open") {
             // Create or update connection to active status
             newConnections.set(eventData.id, {
+              ...newConnections.get(eventData.id),
+              ...eventData,
               id: eventData.id,
               url: eventData.url,
-              status: eventData.type === "connection" ? "connecting" : "open",
+              status: eventData.status || (eventData.type === "connection" ? "connecting" : "open"),
               timestamp: eventData.timestamp,
               lastActivity: eventData.timestamp,
               frameContext: eventData.frameContext, // Preserve iframe context information
@@ -363,9 +386,11 @@ const WebSocketPanel = () => {
             // Update connection to inactive status, create if connection does not exist
             const existing = newConnections.get(eventData.id);
             newConnections.set(eventData.id, {
+              ...existing,
+              ...eventData,
               id: eventData.id,
               url: existing?.url || eventData.url || "Unknown URL",
-              status: eventData.type, // "close" or "error"
+              status: eventData.status || eventData.type, // "close" or "error"
               timestamp: existing?.timestamp || eventData.timestamp,
               lastActivity: eventData.timestamp,
               frameContext: existing?.frameContext || eventData.frameContext, // Preserve iframe context information
@@ -373,11 +398,13 @@ const WebSocketPanel = () => {
           } else if (eventData.type === "message") {
             // Update last activity time (for message events)
             const existing = newConnections.get(eventData.id);
-            if (existing) {
+            if (existing || eventData.protocol === "sse") {
               newConnections.set(eventData.id, {
+                ...eventData,
                 ...existing,
+                status: existing?.status || "open",
                 lastActivity: eventData.timestamp,
-                frameContext: existing.frameContext || eventData.frameContext, // Preserve iframe context information
+                frameContext: existing?.frameContext || eventData.frameContext, // Preserve iframe context information
               });
             }
           }
@@ -551,6 +578,7 @@ const WebSocketPanel = () => {
     message,
     direction,
   }) => {
+    if (connectionsMap.get(connectionId)?.protocol === "sse") return { success: false, error: "SSE is read-only" };
 
     try {
       // 1. Send simulate message to background (for actual simulation execution)
@@ -604,6 +632,7 @@ const WebSocketPanel = () => {
     );
 
     return {
+      ...connectionInfo,
       id: selectedConnectionId,
       url: connectionInfo.url,
       messages: connectionMessages,
@@ -612,6 +641,7 @@ const WebSocketPanel = () => {
 
   // Handle opening SimulateMessagePanel
   const handleOpenSimulatePanel = (options = {}) => {
+    if (connectionsMap.get(selectedConnectionId)?.protocol === "sse") return;
 
     if (floatingSimulateRef.current) {
       floatingSimulateRef.current.openPanel(options);

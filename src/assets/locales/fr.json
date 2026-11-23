@@ -312,5 +312,15 @@
   "messageDetails.projection.expand": "Développer",
   "messageDetails.projection.collapse": "Réduire",
   "messageDetails.projection.searchRawTooltip": "Recherche les données brutes du message",
-  "messageDetails.projection.lengthTooltip": "Longueur en caractères du message d'origine"
+  "messageDetails.projection.lengthTooltip": "Longueur en caractères du message d'origine",
+  "sse.readOnly": "Lecture seule",
+  "sse.truncated": "Observation tronquée",
+  "sse.historyTruncated": "Ancien historique SSE supprimé",
+  "sse.reason.byte-limit": "Limite de taille",
+  "sse.reason.event-limit": "Limite d’événements",
+  "sse.reason.buffer-limit": "Limite du tampon",
+  "sse.reason.time-limit": "Limite de durée",
+  "sse.reason.monitoring-paused": "Surveillance en pause",
+  "sse.reason.parser-error": "Erreur d’analyse",
+  "sse.reason.response-wrapper-error": "Enveloppe de réponse indisponible"
 }

@@ -309,5 +309,15 @@
   "messageDetails.projection.expand": "展開",
   "messageDetails.projection.collapse": "收起",
   "messageDetails.projection.searchRawTooltip": "搜尋原始訊息資料",
-  "messageDetails.projection.lengthTooltip": "原始訊息字元長度"
+  "messageDetails.projection.lengthTooltip": "原始訊息字元長度",
+  "sse.readOnly": "僅觀察",
+  "sse.truncated": "觀察已截斷",
+  "sse.historyTruncated": "較早的 SSE 歷史已捨棄",
+  "sse.reason.byte-limit": "位元組上限",
+  "sse.reason.event-limit": "事件數上限",
+  "sse.reason.buffer-limit": "緩衝區上限",
+  "sse.reason.time-limit": "時間上限",
+  "sse.reason.monitoring-paused": "監控已暫停",
+  "sse.reason.parser-error": "解析錯誤",
+  "sse.reason.response-wrapper-error": "回應包裝不可用"
 }

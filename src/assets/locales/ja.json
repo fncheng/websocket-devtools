@@ -310,5 +310,15 @@
   "messageDetails.projection.expand": "展開",
   "messageDetails.projection.collapse": "折りたたむ",
   "messageDetails.projection.searchRawTooltip": "生のメッセージデータを検索",
-  "messageDetails.projection.lengthTooltip": "元のメッセージ文字数"
+  "messageDetails.projection.lengthTooltip": "元のメッセージ文字数",
+  "sse.readOnly": "読み取り専用",
+  "sse.truncated": "監視を打ち切りました",
+  "sse.historyTruncated": "以前の SSE 履歴を破棄しました",
+  "sse.reason.byte-limit": "バイト数の上限",
+  "sse.reason.event-limit": "イベント数の上限",
+  "sse.reason.buffer-limit": "バッファーの上限",
+  "sse.reason.time-limit": "時間の上限",
+  "sse.reason.monitoring-paused": "監視を一時停止",
+  "sse.reason.parser-error": "解析エラー",
+  "sse.reason.response-wrapper-error": "レスポンスのラップ不可"
 }

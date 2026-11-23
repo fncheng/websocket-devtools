@@ -1247,6 +1247,46 @@
     "message": "元のメッセージ文字数",
     "description": "Translation for messageDetails.projection.lengthTooltip"
   },
+  "sse_readOnly": {
+    "message": "読み取り専用",
+    "description": "Translation for sse.readOnly"
+  },
+  "sse_truncated": {
+    "message": "監視を打ち切りました",
+    "description": "Translation for sse.truncated"
+  },
+  "sse_historyTruncated": {
+    "message": "以前の SSE 履歴を破棄しました",
+    "description": "Translation for sse.historyTruncated"
+  },
+  "sse_reason_byte_limit": {
+    "message": "バイト数の上限",
+    "description": "Translation for sse.reason.byte-limit"
+  },
+  "sse_reason_event_limit": {
+    "message": "イベント数の上限",
+    "description": "Translation for sse.reason.event-limit"
+  },
+  "sse_reason_buffer_limit": {
+    "message": "バッファーの上限",
+    "description": "Translation for sse.reason.buffer-limit"
+  },
+  "sse_reason_time_limit": {
+    "message": "時間の上限",
+    "description": "Translation for sse.reason.time-limit"
+  },
+  "sse_reason_monitoring_paused": {
+    "message": "監視を一時停止",
+    "description": "Translation for sse.reason.monitoring-paused"
+  },
+  "sse_reason_parser_error": {
+    "message": "解析エラー",
+    "description": "Translation for sse.reason.parser-error"
+  },
+  "sse_reason_response_wrapper_error": {
+    "message": "レスポンスのラップ不可",
+    "description": "Translation for sse.reason.response-wrapper-error"
+  },
   "extensionName": {
     "message": "WebSocket DevTools",
     "description": "Extension name"

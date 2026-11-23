@@ -318,5 +318,15 @@
   "messageDetails_projection_expand": "messageDetails.projection.expand",
   "messageDetails_projection_collapse": "messageDetails.projection.collapse",
   "messageDetails_projection_searchRawTooltip": "messageDetails.projection.searchRawTooltip",
-  "messageDetails_projection_lengthTooltip": "messageDetails.projection.lengthTooltip"
+  "messageDetails_projection_lengthTooltip": "messageDetails.projection.lengthTooltip",
+  "sse_readOnly": "sse.readOnly",
+  "sse_truncated": "sse.truncated",
+  "sse_historyTruncated": "sse.historyTruncated",
+  "sse_reason_byte_limit": "sse.reason.byte-limit",
+  "sse_reason_event_limit": "sse.reason.event-limit",
+  "sse_reason_buffer_limit": "sse.reason.buffer-limit",
+  "sse_reason_time_limit": "sse.reason.time-limit",
+  "sse_reason_monitoring_paused": "sse.reason.monitoring-paused",
+  "sse_reason_parser_error": "sse.reason.parser-error",
+  "sse_reason_response_wrapper_error": "sse.reason.response-wrapper-error"
 }

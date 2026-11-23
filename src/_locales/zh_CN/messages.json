@@ -1279,6 +1279,46 @@
     "message": "原始消息字符长度",
     "description": "Translation for messageDetails.projection.lengthTooltip"
   },
+  "sse_readOnly": {
+    "message": "仅观察",
+    "description": "Translation for sse.readOnly"
+  },
+  "sse_truncated": {
+    "message": "观察已截断",
+    "description": "Translation for sse.truncated"
+  },
+  "sse_historyTruncated": {
+    "message": "较早的 SSE 历史已丢弃",
+    "description": "Translation for sse.historyTruncated"
+  },
+  "sse_reason_byte_limit": {
+    "message": "字节数上限",
+    "description": "Translation for sse.reason.byte-limit"
+  },
+  "sse_reason_event_limit": {
+    "message": "事件数上限",
+    "description": "Translation for sse.reason.event-limit"
+  },
+  "sse_reason_buffer_limit": {
+    "message": "缓冲区上限",
+    "description": "Translation for sse.reason.buffer-limit"
+  },
+  "sse_reason_time_limit": {
+    "message": "时长上限",
+    "description": "Translation for sse.reason.time-limit"
+  },
+  "sse_reason_monitoring_paused": {
+    "message": "监控已暂停",
+    "description": "Translation for sse.reason.monitoring-paused"
+  },
+  "sse_reason_parser_error": {
+    "message": "解析错误",
+    "description": "Translation for sse.reason.parser-error"
+  },
+  "sse_reason_response_wrapper_error": {
+    "message": "响应包装不可用",
+    "description": "Translation for sse.reason.response-wrapper-error"
+  },
   "extensionName": {
     "message": "WebSocket DevTools",
     "description": "Extension name"

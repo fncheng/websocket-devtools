@@ -57,7 +57,7 @@ const WebSocketList = ({
             (event) => event.id === connInfo.id && event.type === "message"
           );
           
-          const messageCount = connectionEvents
+          const messageCount = connInfo.protocol === "sse" ? new Set(connectionEvents.map((event) => event.messageId)).size : connectionEvents
             .filter(
               (msg, index, arr) =>
                 arr.findIndex(
@@ -117,6 +117,8 @@ const WebSocketList = ({
           }
 
           return {
+            protocol: connInfo.protocol,
+            sseSource: connInfo.sseSource,
             id: connInfo.id,
             url: connInfo.url,
             type: "connection",
@@ -143,7 +145,7 @@ const WebSocketList = ({
     .sort((a, b) => b.timestamp - a.timestamp);
 
   const inactiveConnections = filteredConnections
-    .filter((conn) => conn.status === "closed" || conn.status === "error")
+    .filter((conn) => conn.status === "closed" || conn.status === "error" || conn.status === "paused" || conn.status === "truncated")
     .sort((a, b) => b.timestamp - a.timestamp);
 
   // Generic function to render connection item
@@ -175,6 +177,8 @@ const WebSocketList = ({
 
     // Helper function to get status text
     const getStatusText = () => {
+      if (connection.status === "paused") return t("sse.reason.monitoring-paused");
+      if (connection.status === "truncated") return t("sse.truncated");
       if (connection.status === "connecting") {
         return t("panel.connectionList.status.connecting");
       }
@@ -288,6 +292,7 @@ const WebSocketList = ({
         <div className="ws-connection-item-header">
           <div className="ws-connection-status-group">
             {renderStatusIcon()}
+            <span>{connection.protocol === "sse" ? `SSE · ${connection.sseSource}` : "WebSocket"}</span>
             <span className={`ws-connection-status-text ${getStatusTextClass()}`}>
               {getStatusText()}
             </span>
@@ -333,7 +338,7 @@ const WebSocketList = ({
           </div>
 
           {/* Top-right close button, only render when active, show on hover */}
-          {isActive && (
+          {isActive && connection.protocol !== "sse" && (
             <button
               className="ws-connection-close-btn"
               onClick={handleCloseConnection}

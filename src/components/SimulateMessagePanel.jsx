@@ -223,7 +223,7 @@ const SimulateMessagePanel = forwardRef(
       async (direction, data = null) => {
         const messageData = data || simulateMessage;
 
-        if (!connection || !messageData.trim() || isSending) {
+        if (!connection || connection.protocol === "sse" || !messageData.trim() || isSending) {
           return;
         }
 
@@ -279,7 +279,7 @@ const SimulateMessagePanel = forwardRef(
 
     const handleSimulateSystemEvent = useCallback(
       async (eventData) => {
-        if (!connection || !eventData) {
+        if (!connection || connection.protocol === "sse" || !eventData) {
           return;
         }
 
@@ -474,7 +474,7 @@ const SimulateMessagePanel = forwardRef(
 
               {/* Window content */}
               <div className="simulate-window-content">
-                {!connection ? (
+                {connection?.protocol === "sse" ? <div>{t("sse.readOnly")}</div> : !connection ? (
                   <div className="simulate-panel-empty floating">
                     <div className="simulate-empty-state">
                       <div className="simulate-empty-icon">

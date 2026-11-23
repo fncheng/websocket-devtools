@@ -29,6 +29,11 @@ All data processing occurs entirely within your browser using browser-specific l
 
 ## How We Use Your Data
 
+### SSE observation
+- **Data**: SSE connection URLs, available request method and HTTP status, event names, server event IDs and event data from page `EventSource` and `fetch` streams. Request bodies, credentials and authorization headers are not separately collected.
+- **Storage**: Captured events are held in bounded extension memory, not durable history. Existing WebSocket capture and optional saved favorites follow their respective policies below.
+- **Scope**: Observation follows the extension's enabled and monitoring states and can begin before DevTools is opened. Pausing observation does not cancel application requests.
+
 ### WebSocket Monitoring
 - **Purpose**: To help you debug WebSocket connections on your chosen web pages
 - **Scope**: Only monitors pages where you actively use the DevTools panel
@@ -62,7 +67,7 @@ All data processing occurs entirely within your browser using browser-specific l
 ### Host Permissions
 - **http://*/*** and **https://*/***: 
   - Purpose: Inject monitoring scripts into web pages to intercept WebSocket connections
-  - Scope: Only when you open DevTools and use the WebSocket panel
+  - Scope: Enabled HTTP and HTTPS pages, including before DevTools is opened
   - Usage: Required to proxy WebSocket API and capture connection events
 
 ## Data Sharing and Third Parties

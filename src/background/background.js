@@ -6,6 +6,35 @@ let websocketData = {
   isMonitoring: true, // Monitoring enabled by default
 };
 
+// SSE history is bounded independently of existing WebSocket storage.
+const SSE_HISTORY_LIMIT = 20000;
+const SSE_HISTORY_BYTES = 16 * 1024 * 1024;
+let sseHistoryCount = 0;
+let sseHistoryBytes = 0;
+// Approximate retained serialized metadata and payload; this is not a JS heap measurement.
+function sseSize(event) { return JSON.stringify(event).length * 2; }
+function storeEvent(event) {
+  websocketData.connections.push(event);
+  if (event.protocol !== "sse") return;
+  sseHistoryCount++;
+  sseHistoryBytes += sseSize(event);
+  if ((sseHistoryCount > SSE_HISTORY_LIMIT || sseHistoryBytes > SSE_HISTORY_BYTES) && !event.historyTruncated) {
+    const originalSize = sseSize(event);
+    event.historyTruncated = true;
+    sseHistoryBytes += sseSize(event) - originalSize;
+  }
+  while (sseHistoryCount > SSE_HISTORY_LIMIT || sseHistoryBytes > SSE_HISTORY_BYTES) {
+    const index = websocketData.connections.findIndex(item => item.protocol === "sse");
+    if (index < 0) break;
+    const [removed] = websocketData.connections.splice(index, 1);
+    sseHistoryCount--;
+    sseHistoryBytes -= sseSize(removed);
+  }
+}
+function isSseConnection(tabId, id) {
+  return typeof id === "string" && id.startsWith("sse_") || websocketData.connections.some(event => event.tabId === tabId && event.id === id && event.protocol === "sse");
+}
+
 // New: Maintain DevTools port <-> tabId mapping
 const devtoolsPorts = new Map(); // port -> tabId
 
@@ -146,7 +175,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
 
       // Store connection data
-      websocketData.connections.push(message.data);
+      storeEvent(message.data);
 
       // Forward to DevTools Panel
       forwardToDevTools(message);
@@ -173,7 +202,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         eventData.tabId = sender.tab.id;
         
         // Store connection data
-        websocketData.connections.push(eventData);
+        storeEvent(eventData);
       });
 
       // Forward batch to DevTools Panel
@@ -200,6 +229,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case "simulate-message": {
       // If a tabId is specified, notify only that tab; otherwise, notify all tabs
       const targetTabId = message.data.tabId || null;
+      if (isSseConnection(targetTabId, message.data.connectionId)) { sendResponse({ success: false, error: "SSE is read-only" }); break; }
       notifyAllTabs("simulate-message", message.data, targetTabId);
       sendResponse({ success: true, simulated: true });
       break;
@@ -208,6 +238,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case "simulate-system-event": {
       // Get current active tab ID (from devtools panel context)
       const systemEventTabId = message.data.tabId || null;
+      if (isSseConnection(systemEventTabId, message.data.connectionId)) { sendResponse({ success: false, error: "SSE is read-only" }); break; }
       notifyAllTabs("simulate-system-event", message.data, systemEventTabId);
       sendResponse({ success: true, simulated: true, eventType: message.data.eventType });
       break;
@@ -363,6 +394,10 @@ function clearTabConnections(tabId, navigationUrl = null) {
     (conn) => conn.tabId !== tabId
   );
 
+  const remainingSse = websocketData.connections.filter(event => event.protocol === "sse");
+  sseHistoryCount = remainingSse.length;
+  sseHistoryBytes = remainingSse.reduce((total, event) => total + sseSize(event), 0);
+
   forwardToDevTools({
     type: "page-refresh",
     data: {
@@ -400,6 +435,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 
 // When extension starts up
 chrome.runtime.onStartup.addListener(() => {
+  sseHistoryCount = 0;
+  sseHistoryBytes = 0;
   websocketData = {
     connections: [],
     isMonitoring: true, // Monitoring enabled by default

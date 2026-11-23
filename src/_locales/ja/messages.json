@@ -1252,7 +1252,7 @@
     "description": "Translation for sse.readOnly"
   },
   "sse_truncated": {
-    "message": "監視を打ち切りました",
+    "message": "観察が途中で打ち切られました",
     "description": "Translation for sse.truncated"
   },
   "sse_historyTruncated": {
@@ -1276,7 +1276,7 @@
     "description": "Translation for sse.reason.time-limit"
   },
   "sse_reason_monitoring_paused": {
-    "message": "監視を一時停止",
+    "message": "監視一時停止",
     "description": "Translation for sse.reason.monitoring-paused"
   },
   "sse_reason_parser_error": {

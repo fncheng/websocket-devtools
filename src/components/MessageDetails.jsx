@@ -549,9 +549,10 @@ const MessageDetails = ({
             {message.type === "open"
               ? t("messageDetails.connection.requestServed", { data: message.data || "WebSocket" })
               : message.type === "close"
-              ? (message.status === "paused" || message.status === "truncated" ? t("sse.truncated") : t("messageDetails.connection.disconnected", { url: message.url || "WebSocket" }))
+              ? (message.status === "paused" ? t("sse.reason.monitoring-paused") : message.status === "truncated" ? t("sse.truncated") : t("messageDetails.connection.disconnected", { url: message.url || "WebSocket" }))
               : message.type === "error"
               ? t("messageDetails.connection.connectionError")
+              : message.type === "connection" ? t("panel.connectionList.status.connecting")
               : message.type === "truncated" ? `${t("sse.truncated")}: ${t(`sse.reason.${message.reason}`)}` : message.type}
           </span>
         </div>

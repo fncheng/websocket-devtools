@@ -92,7 +92,8 @@ const MessageProjectionControls = ({ config, messages, cache, onChange }) => {
               aria-label={t("messageDetails.projection.candidates")}
               onMouseDown={freezeCandidates}
               onKeyDown={(event) => {
-                if ([" ", "ArrowDown", "ArrowUp", "Enter"].includes(event.key)) freezeCandidates();
+                if (event.key === "Escape") resumeCandidateUpdates();
+                else if ([" ", "ArrowDown", "ArrowUp", "Enter"].includes(event.key)) freezeCandidates();
               }}
               onBlur={resumeCandidateUpdates}
               onChange={(event) => {

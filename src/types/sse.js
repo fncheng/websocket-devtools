@@ -16,6 +16,8 @@
  * @property {string} url Script-visible connection URL.
  * @property {string} type Connection, message, lifecycle or truncation event.
  * @property {number} timestamp Observation time in milliseconds.
+ * @property {'incoming'|'system'} direction Event direction.
+ * @property {string} [reason] Reason for stopping or truncating observation.
  * @property {string} [data] Complete event data or truncation reason.
  * @property {string} [status] Observed lifecycle state.
  */

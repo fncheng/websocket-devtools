@@ -5,6 +5,7 @@ import {
   getJsonContextCopyValue,
   getJsonContextPath,
   getJsonKeyboardContextPosition,
+  getJsonKeyboardContextTarget,
   getJsonPointerPosition,
   getJsonContextTarget,
   isCompleteJsonSyntaxTree,
@@ -143,4 +144,15 @@ test("uses opposite cursor sides to keep a soft-wrapped final character on its v
 
   assert.equal(getJsonPointerPosition(view, 16, 10), 1);
   assert.deepEqual(calls, [[1, 1], [2, -1]]);
+});
+
+
+test("keyboard caret immediately after a value resolves it before comma or whitespace", () => {
+  for (const [source, boundary] of [['{"a":123,"b":2}', ',"b"'], ['{"a":true ,"b":2}', ' ,'], ['{"a":"x,y","b":2}', ',"b"']]) {
+    const offset = source.indexOf(boundary);
+    const target = getJsonKeyboardContextTarget(parse(source), source, offset);
+    assert.equal(getJsonContextPath(target), "a");
+  }
+  const source = '{"a":"x, y"}';
+  assert.equal(getJsonContextPath(getJsonKeyboardContextTarget(parse(source), source, source.indexOf(','))), "a");
 });

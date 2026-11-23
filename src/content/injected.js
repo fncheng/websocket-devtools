@@ -1248,7 +1248,7 @@
       if (stopped && !force) return;
       sendEvent({ ...base, type, direction: type === "message" ? "incoming" : "system",
         timestamp: Date.now(), messageId: generateMessageId(), ...extra }, force);
-      if (type === "close" || type === "error") { activeSseObservers.delete(observer); clearTimeout(deadline); }
+      if (type === "close" || type === "error") { stopped = true; activeSseObservers.delete(observer); clearTimeout(deadline); }
     };
     const deadline = setTimeout(() => observer.stop("time-limit"), sseLimits.duration);
     const observer = {

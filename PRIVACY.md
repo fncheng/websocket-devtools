@@ -1,6 +1,6 @@
 # Privacy Policy for WebSocket DevTools
 
-**Last Updated: January 2025**
+**Last Updated: November 2026**
 
 ## Overview
 
@@ -9,7 +9,7 @@ WebSocket DevTools is a browser extension for Google Chrome and Microsoft Edge d
 ## Data Collection and Processing
 
 ### What We DON'T Collect
-- **No Personal Information**: We do not collect, store, or transmit any personally identifiable information
+- **Personal Information**: We do not intentionally collect personal information, but captured traffic and URLs may contain personal or sensitive data that is processed locally.
 - **No Browsing History**: We do not track or record your browsing activity
 - **No External Transmission**: No data is sent to external servers or third parties
 - **No Analytics**: We do not use analytics services or tracking mechanisms
@@ -32,7 +32,7 @@ All data processing occurs entirely within your browser using browser-specific l
 ### SSE observation
 - **Data**: SSE connection URLs, available request method and HTTP status, event names, server event IDs and event data from page `EventSource` and `fetch` streams. Request bodies, credentials and authorization headers are not separately collected.
 - **Storage**: Captured events are held in bounded extension memory, not durable history. Existing WebSocket capture and optional saved favorites follow their respective policies below.
-- **Scope**: Observation follows the extension's enabled and monitoring states and can begin before DevTools is opened. Pausing observation does not cancel application requests.
+- **Scope**: New pages are injected only while the extension is enabled. Existing injections follow the monitoring state; turning off the extension does not stop observation on already injected pages. Pause monitoring or reload the page to stop it. Observation can begin before DevTools is opened and pausing does not cancel application requests.
 
 ### WebSocket Monitoring
 - **Purpose**: To help you debug WebSocket connections on your chosen web pages

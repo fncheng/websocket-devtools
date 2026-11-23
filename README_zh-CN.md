@@ -108,6 +108,12 @@
 
 > **💡 专业提示**: 扩展在后台监控WebSocket连接，所以即使你在WebSocket建立后才打开DevTools，也不会错过任何连接！
 
+## SSE 观察
+
+扩展支持观察页面中原生 `EventSource` 和响应类型为 `text/event-stream` 的 `fetch`。SSE 仅提供观察，WebSocket 拦截、模拟和关闭操作不适用。原生 `EventSource` 可观察默认消息和通过实例 `addEventListener` 注册的命名事件；未注册的命名事件不保证可见。`fetch` 随应用读取响应体时观察事件，应用不读取时不会产生事件记录。暂停监控不会关闭应用连接，重新开启后仅观察新连接。
+
+每条流的观察限制为 8 MiB、5,000 个事件、256 KiB 解析缓冲和 30 分钟；后台 SSE 历史限制为 20,000 条及按完整事件序列化估算的 16 MiB，截断会在面板提示；受影响连接仍有历史记录时，重新加载面板后可能提示历史丢弃。历史保存在扩展内存，Service Worker 重启后可能丢失。Worker 内发起的请求、注入前的请求、预先保存的原始 API 以及所有 iframe/CSP 场景均不保证覆盖。`fetch` 响应会被包装以跟随应用读取，因此对象身份发生变化，BYOB 等边缘行为可能不同；应用主动调用 `clone()` 仍遵循浏览器流拆分行为。
+
 ## 🔒 隐私和安全
 
 - ✅ **无数据收集** - 所有数据都保存在你的浏览器中
@@ -161,9 +167,3 @@
 [youtube-link]: https://www.youtube.com/watch?v=L64x__1xORQ
 [edge-shield]: https://img.shields.io/badge/Microsoft%20Edge-Install-0078d4?labelColor=black&style=flat-square
 [edge-link]: https://microsoftedge.microsoft.com/addons/detail/websocket-devtools/idkoddoekbiekjkpfjeadehmknaoppol
-
-## SSE 观察
-
-扩展支持观察页面中原生 `EventSource` 和响应类型为 `text/event-stream` 的 `fetch`。SSE 仅提供观察，WebSocket 拦截、模拟和关闭操作不适用。原生 `EventSource` 可观察默认消息和通过实例 `addEventListener` 注册的命名事件；未注册的命名事件不保证可见。`fetch` 随应用读取响应体时观察事件，应用不读取时不会产生事件记录。暂停监控不会关闭应用连接，重新开启后仅观察新连接。
-
-每条流的观察限制为 8 MiB、5,000 个事件、256 KiB 解析缓冲和 30 分钟；后台 SSE 历史限制为 20,000 条及按完整事件序列化估算的 16 MiB，截断或历史丢弃会在面板提示。历史保存在扩展内存，Service Worker 重启后可能丢失。Worker 内发起的请求、注入前的请求、预先保存的原始 API 以及所有 iframe/CSP 场景均不保证覆盖。`fetch` 响应会被包装以跟随应用读取，因此对象身份发生变化，BYOB 等边缘行为可能不同；应用主动调用 `clone()` 仍遵循浏览器流拆分行为。

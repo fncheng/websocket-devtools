@@ -231,3 +231,19 @@ export const getJsonContextCopyValue = (documentText, target) => {
 export const getJsonContextPath = (target) => (
   target.isRoot ? null : formatProjectionPath(target.pathTokens)
 );
+
+/** Resolve an insertion point against the parsed character under or immediately before it.
+ * @param {JsonSyntaxTree} tree
+ * @param {string} documentText
+ * @param {number} cursorPosition
+ * @returns {JsonContextTarget | null}
+ */
+export const getJsonKeyboardContextTarget = (tree, documentText, cursorPosition) => {
+  const position = getJsonKeyboardContextPosition(documentText, cursorPosition);
+  if (position === null) return null;
+  const target = getJsonContextTarget(tree, documentText, position);
+  if (target || position !== cursorPosition || cursorPosition === 0) return target;
+  // Only fall back across an adjacent separator, never across arbitrary whitespace.
+  if (!isWhitespaceOrSeparator(documentText[position]) || isWhitespaceOrSeparator(documentText[position - 1])) return null;
+  return getJsonContextTarget(tree, documentText, position - 1);
+};

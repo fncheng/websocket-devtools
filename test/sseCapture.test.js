@@ -15,14 +15,14 @@ class FakeEventSource extends EventTarget {
   constructor(url) { super(); this.url = url; this.readyState = 0; }
   close() { this.readyState = 2; }
 }
-async function harness(fetchImpl) {
+async function harness(fetchImpl, clock = Date) {
   const events = [], callbacks = [], listeners = new Map();
   const win = { WebSocket: FakeWebSocket, EventSource: FakeEventSource, fetch: fetchImpl,
     location: { href: "https://example.test/" }, addEventListener(type, callback) { listeners.set(type, callback); },
     postMessage(value) { if (value.type === "websocket-event-batch") events.push(...value.payload); },
   };
   win.top = win;
-  const context = vm.createContext({ window: win, URL, Date, Math, Map, Set, JSON, Reflect,
+  const context = vm.createContext({ window: win, URL, Date: clock, Math, Map, Set, JSON, Reflect,
     ArrayBuffer, Uint8Array, TextDecoder, ReadableStream, Response, Blob, DOMException, console, atob, btoa,
     history: { pushState() {}, replaceState() {} },
     setTimeout(fn, delay) { if (delay <= 70) callbacks.push(fn); return callbacks.length; }, clearTimeout() {}, setInterval() { return 1; }, clearInterval() {},
@@ -150,7 +150,8 @@ test("init signal overrides Request signal and pause does not close the applicat
 });
 
 test("traffic circuit breaker stops SSE observations without closing the application source", async () => {
-  const h = await harness(() => Promise.resolve(new Response()));
+  class FixedDate extends Date { static now() { return 1000; } }
+  const h = await harness(() => Promise.resolve(new Response()), FixedDate);
   const source = new h.win.EventSource("https://example.test/events");
   let dispatched = 0;
   source.addEventListener("message", () => dispatched++);
@@ -200,4 +201,17 @@ test("wrapped Response methods remain writable and borrowed clone uses its recei
   assert.equal(wrapped.clone, replacement);
   assert.equal(Response.prototype.json, nativeJson);
   assert.equal(Response.prototype.clone, nativeClone);
+});
+
+
+test("closed EventSource stops recording subsequently dispatched messages", async () => {
+  const h = await harness(() => Promise.resolve(new Response()));
+  const source = new h.win.EventSource("https://example.test/events");
+  source.close();
+  const event = new Event("message");
+  Object.defineProperties(event, { data: { value: "late" }, lastEventId: { value: "1" } });
+  source.dispatchEvent(event);
+  h.flush();
+  assert.equal(h.events.filter(entry => entry.type === "message").length, 0);
+  assert.equal(h.events.filter(entry => entry.type === "close").length, 1);
 });

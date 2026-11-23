@@ -149,6 +149,28 @@ test("init signal overrides Request signal and pause does not close the applicat
   assert.ok(h.events.some(event => event.reason === "monitoring-paused"));
 });
 
+test("traffic circuit breaker stops SSE observations without closing the application source", async () => {
+  const h = await harness(() => Promise.resolve(new Response()));
+  const source = new h.win.EventSource("https://example.test/events");
+  let dispatched = 0;
+  source.addEventListener("message", () => dispatched++);
+  const event = new Event("message");
+  Object.defineProperties(event, { data: { value: "tick" }, lastEventId: { value: "1" } });
+  // The 801st event in the window trips the circuit breaker.
+  for (let index = 0; index < 801; index++) source.dispatchEvent(event);
+  h.flush();
+  assert.ok(h.events.some(entry => entry.type === "truncated" && entry.reason === "monitoring-paused"));
+  assert.ok(h.events.some(entry => entry.type === "close" && entry.status === "paused" && entry.reason === "monitoring-paused"));
+  const messagesBeforeResume = h.events.filter(entry => entry.type === "message").length;
+  assert.equal(messagesBeforeResume, 800);
+  h.listeners.get("message")({ data: { source: "websocket-proxy-content", type: "start-monitoring" } });
+  source.dispatchEvent(event);
+  h.flush();
+  assert.equal(h.events.filter(entry => entry.type === "message").length, messagesBeforeResume);
+  assert.equal(dispatched, 802);
+  assert.equal(source.readyState, 0);
+});
+
 test("Request signal abort is observed when init does not override it", async () => {
   const controller = new AbortController();
   const h = await harness(() => Promise.resolve(new Response(new ReadableStream({}), { headers: { "content-type": "text/event-stream" } })));

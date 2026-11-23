@@ -484,6 +484,7 @@
       console.warn(`[WebSocket Proxy] Circuit breaker triggered - High traffic (${traffic.count} msg/s). Stopping monitoring.`);
 
       // Stop monitoring
+      stopActiveSseObservers("monitoring-paused");
       proxyState.isMonitoring = false;
 
       // Notify (will be received by panel if open, or background will update state)
@@ -1228,6 +1229,10 @@
   // Limits bound retained parser data and extension traffic, not browser network buffers.
   const sseLimits = { bytes: 8 * 1024 * 1024, events: 5000, buffer: 256 * 1024, duration: 30 * 60 * 1000 };
   const activeSseObservers = new Set();
+  /** @param {string} reason Why observation stopped. */
+  function stopActiveSseObservers(reason) {
+    for (const observer of activeSseObservers) observer.stop(reason);
+  }
   /**
    * @param {string} id Local connection ID.
    * @param {string} url Script-visible URL.
@@ -1499,9 +1504,7 @@
           break;
 
         case "stop-monitoring":
-          for (const observer of activeSseObservers) {
-            observer.stop("monitoring-paused");
-          }
+          stopActiveSseObservers("monitoring-paused");
           proxyState.isMonitoring = false;
           // // Send state update
           // sendEvent({

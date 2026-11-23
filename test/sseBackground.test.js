@@ -40,6 +40,32 @@ test("SSE history budget includes repeated metadata as well as message data", as
   assert.equal(history[0].historyTruncated, true);
 });
 
+test("SSE truncation is attributed to the connection that lost history", async () => {
+  let onMessage;
+  const hook = () => ({ addListener() {} });
+  const chrome = { runtime: { onConnect: hook(), onInstalled: hook(), onMessage: { addListener(fn) { onMessage = fn; } }, onStartup: hook(), onSuspend: hook(), onUpdateAvailable: hook() }, storage: { local: { get(_keys, done) { done({}); }, set() {} } }, tabs: { onUpdated: hook(), query() { return Promise.resolve([]); }, sendMessage() { return Promise.resolve(); } } };
+  const source = (await readFile(new URL("../src/background/background.js", import.meta.url), "utf8"))
+    .replace("const SSE_HISTORY_LIMIT = 20000;", "const SSE_HISTORY_LIMIT = 5;");
+  const context = vm.createContext({ chrome, URL, console, setInterval() {}, clearInterval() {} });
+  vm.runInContext(source, context);
+  const send = (message, sender = {}) => { let result; onMessage(message, sender, value => { result = value; }); return result; };
+  const events = [
+    ...Array.from({ length: 4 }, (_, index) => ({ id: "sse_a", protocol: "sse", type: "message", data: "", messageId: `a${index}` })),
+    ...Array.from({ length: 3 }, (_, index) => ({ id: "sse_b", protocol: "sse", type: "message", data: "", messageId: `b${index}` })),
+  ];
+  for (const event of events) {
+    send({ type: "websocket-event", data: { ...event } }, { tab: { id: event.id === "sse_a" ? 7 : 8 } });
+  }
+  const history = send({ type: "get-existing-data" }).data;
+  assert.equal(history.length, 5);
+  assert.equal(vm.runInContext("sseHistoryCount", context), 5);
+  assert.deepEqual(Array.from(history, event => event.messageId), ["a2", "a3", "b0", "b1", "b2"]);
+  const truncated = history.filter(event => event.historyTruncated);
+  assert.equal(truncated.length, 1);
+  assert.equal(truncated[0].id, "sse_a");
+  assert.equal(history.filter(event => event.id === "sse_b").some(event => event.historyTruncated), false);
+});
+
 test("repeated evictions and oversized self-eviction keep the byte budget consistent", async () => {
   let onMessage;
   const hook = () => ({ addListener() {} });

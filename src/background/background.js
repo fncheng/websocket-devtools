@@ -13,22 +13,46 @@ let sseHistoryCount = 0;
 let sseHistoryBytes = 0;
 // Approximate retained serialized metadata and payload; this is not a JS heap measurement.
 function sseSize(event) { return JSON.stringify(event).length * 2; }
-function storeEvent(event) {
-  websocketData.connections.push(event);
-  if (event.protocol !== "sse") return;
-  sseHistoryCount++;
-  sseHistoryBytes += sseSize(event);
-  if ((sseHistoryCount > SSE_HISTORY_LIMIT || sseHistoryBytes > SSE_HISTORY_BYTES) && !event.historyTruncated) {
-    const originalSize = sseSize(event);
-    event.historyTruncated = true;
-    sseHistoryBytes += sseSize(event) - originalSize;
-  }
+function sseConnectionKey(event) { return `${event.tabId}:${event.id}`; }
+// Drop the oldest SSE records, returning the connections that lost history.
+function evictSseHistory() {
+  const affected = new Set();
   while (sseHistoryCount > SSE_HISTORY_LIMIT || sseHistoryBytes > SSE_HISTORY_BYTES) {
     const index = websocketData.connections.findIndex(item => item.protocol === "sse");
     if (index < 0) break;
     const [removed] = websocketData.connections.splice(index, 1);
     sseHistoryCount--;
     sseHistoryBytes -= sseSize(removed);
+    affected.add(sseConnectionKey(removed));
+  }
+  return affected;
+}
+// Flag a surviving record so panels attach the warning to the connection that
+// actually lost history, including when they load existing data later.
+function markTruncatedConnections(affected) {
+  for (const key of affected) {
+    for (let index = websocketData.connections.length - 1; index >= 0; index--) {
+      const candidate = websocketData.connections[index];
+      if (candidate.protocol !== "sse" || sseConnectionKey(candidate) !== key) continue;
+      if (!candidate.historyTruncated) {
+        const originalSize = sseSize(candidate);
+        candidate.historyTruncated = true;
+        sseHistoryBytes += sseSize(candidate) - originalSize;
+      }
+      break;
+    }
+  }
+}
+function storeEvent(event) {
+  websocketData.connections.push(event);
+  if (event.protocol !== "sse") return;
+  sseHistoryCount++;
+  sseHistoryBytes += sseSize(event);
+  // Flagging adds bytes, so keep evicting until both limits hold again.
+  let affected = evictSseHistory();
+  while (affected.size > 0) {
+    markTruncatedConnections(affected);
+    affected = evictSseHistory();
   }
 }
 function isSseConnection(tabId, id) {

@@ -109,6 +109,7 @@ async function collectContentScriptMessages({ topFrame }) {
 
   const chrome = {
     runtime: {
+      id: "test-extension",
       getURL(pathname) {
         return `chrome-extension://test/${pathname}`;
       },

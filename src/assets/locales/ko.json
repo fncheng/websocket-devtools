@@ -313,5 +313,15 @@
   "messageDetails.projection.expand": "펼치기",
   "messageDetails.projection.collapse": "접기",
   "messageDetails.projection.searchRawTooltip": "원시 메시지 데이터 검색",
-  "messageDetails.projection.lengthTooltip": "원본 메시지 문자 길이"
+  "messageDetails.projection.lengthTooltip": "원본 메시지 문자 길이",
+  "sse.readOnly": "읽기 전용",
+  "sse.truncated": "관찰이 제한됨",
+  "sse.historyTruncated": "이전 SSE 기록이 삭제됨",
+  "sse.reason.byte-limit": "바이트 제한",
+  "sse.reason.event-limit": "이벤트 제한",
+  "sse.reason.buffer-limit": "버퍼 제한",
+  "sse.reason.time-limit": "시간 제한",
+  "sse.reason.monitoring-paused": "모니터링 일시 중지",
+  "sse.reason.parser-error": "구문 분석 오류",
+  "sse.reason.response-wrapper-error": "응답 래퍼 사용 불가"
 }

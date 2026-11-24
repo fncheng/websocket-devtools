@@ -1279,6 +1279,46 @@
     "message": "Original message character length",
     "description": "Translation for messageDetails.projection.lengthTooltip"
   },
+  "sse_readOnly": {
+    "message": "Read-only",
+    "description": "Translation for sse.readOnly"
+  },
+  "sse_truncated": {
+    "message": "Observation truncated",
+    "description": "Translation for sse.truncated"
+  },
+  "sse_historyTruncated": {
+    "message": "Older SSE history was discarded",
+    "description": "Translation for sse.historyTruncated"
+  },
+  "sse_reason_byte_limit": {
+    "message": "Byte limit",
+    "description": "Translation for sse.reason.byte-limit"
+  },
+  "sse_reason_event_limit": {
+    "message": "Event limit",
+    "description": "Translation for sse.reason.event-limit"
+  },
+  "sse_reason_buffer_limit": {
+    "message": "Buffer limit",
+    "description": "Translation for sse.reason.buffer-limit"
+  },
+  "sse_reason_time_limit": {
+    "message": "Time limit",
+    "description": "Translation for sse.reason.time-limit"
+  },
+  "sse_reason_monitoring_paused": {
+    "message": "Monitoring paused",
+    "description": "Translation for sse.reason.monitoring-paused"
+  },
+  "sse_reason_parser_error": {
+    "message": "Parser error",
+    "description": "Translation for sse.reason.parser-error"
+  },
+  "sse_reason_response_wrapper_error": {
+    "message": "Response wrapper unavailable",
+    "description": "Translation for sse.reason.response-wrapper-error"
+  },
   "extensionName": {
     "message": "WebSocket DevTools",
     "description": "Extension name"

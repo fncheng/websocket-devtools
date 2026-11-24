@@ -549,10 +549,12 @@ const MessageDetails = ({
             {message.type === "open"
               ? t("messageDetails.connection.requestServed", { data: message.data || "WebSocket" })
               : message.type === "close"
-              ? t("messageDetails.connection.disconnected", { url: message.url || "WebSocket" })
+              ? (message.status === "paused" ? t("sse.reason.monitoring-paused") : message.status === "truncated" ? t("sse.truncated") : t("messageDetails.connection.disconnected", { url: message.url || "WebSocket" }))
               : message.type === "error"
               ? t("messageDetails.connection.connectionError")
-              : message.type}
+              : message.type === "history-summary" ? t("sse.historyTruncated")
+              : message.type === "connection" ? t("panel.connectionList.status.connecting")
+              : message.type === "truncated" ? `${t("sse.truncated")}: ${t(`sse.reason.${message.reason}`)}` : message.type}
           </span>
         </div>
       );
@@ -568,7 +570,7 @@ const MessageDetails = ({
           )}
         </span>
         {tags.length > 0 && <span className="message-tags">{tags}</span>}
-        <span className="message-text">{truncateMessage(message)}</span>
+        <span className="message-text">{message.historyTruncated && <span>{t("sse.historyTruncated")} · </span>}{message.protocol === "sse" && <span title={`id: ${message.lastEventId || ""}`}>[{message.eventName || "message"}] </span>}{truncateMessage(message)}</span>
       </div>
     );
   };
@@ -632,7 +634,8 @@ const MessageDetails = ({
             <div className="message-list-pane">
               <div className="details-header">
                 <div className="connection-info">
-                  <span className="connection-badge" title={connection.url}>{connection.url}</span>
+                  {(connection.historyTruncated || connection.messages.some((message) => message.historyTruncated)) && <span>{t("sse.historyTruncated")}</span>}
+                  <span className="connection-badge" title={connection.url}>{connection.protocol === "sse" ? `SSE · ${t("sse.readOnly")} · ${connection.sseSource} ${connection.method || ""} ${connection.httpStatus || ""} · ` : "WebSocket · "}{connection.url}</span>
                 </div>
                 <div className="controls">
                   <div className="control-row">
@@ -863,9 +866,9 @@ const MessageDetails = ({
                               copyButtonText="📋 Copy"
                               copiedText="✓ Copied"
                               isCopied={copiedMessageKey === messageKey}
-                              showFavoritesButton={true}
-                              onAddToFavorites={handleAddToFavoritesFromViewer}
-                              onSimulate={(data) => {
+                              showFavoritesButton={connection.protocol !== "sse"}
+                              onAddToFavorites={connection.protocol === "sse" ? null : handleAddToFavoritesFromViewer}
+                              onSimulate={connection.protocol === "sse" ? null : (data) => {
                                 if (onOpenSimulatePanel) {
                                   onOpenSimulatePanel({
                                     tab: "editor",
@@ -874,7 +877,7 @@ const MessageDetails = ({
                                 }
                               }}
                             />
-                            {isIntercepting && (
+                            {isIntercepting && connection.protocol !== "sse" && (
                               <div className="intercept-actions">
                                 <button className="action-btn edit">{t("messageDetails.actions.edit")}</button>
                                 <button className="action-btn allow">{t("messageDetails.actions.allow")}</button>

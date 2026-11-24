@@ -121,6 +121,12 @@ Complete WebSocket Traffic Control with advanced proxy, simulation, and blocking
 
 > **💡 Pro Tip**: The extension monitors WebSocket connections in the background, so you won't miss any connections even if you open DevTools after the WebSocket is established!
 
+## SSE observation
+
+The monitor also observes page `EventSource` and `fetch` responses with `Content-Type: text/event-stream`. SSE connections are read-only: WebSocket interception, simulation and close controls do not apply. For `EventSource`, default messages and named events registered through the instance's `addEventListener` are visible; unregistered named events are not. For `fetch`, events are observed as the application consumes the response, so an unread stream does not produce event records. Stopping monitoring does not close the application's connection. Restarting monitoring applies to new connections; truncated observations do not resume.
+
+Observation is bounded per stream by 8 MiB, 5,000 events, a 256 KiB parser buffer and 30 minutes; SSE background history is capped at 20,000 records and 16 MiB of estimated serialized event data and metadata. Truncation is indicated in the panel; discarded history may be indicated after reloading the panel when a record for the affected connection remains in history. History is held in extension memory and can be lost when the extension service worker restarts. Worker-originated requests, requests made before injection, cached native APIs, and all iframe/CSP cases are not guaranteed to be captured. The fetch response is wrapped to follow application reads, which changes object identity and may differ for BYOB readers and other Response edge cases; application-created clones retain the browser's normal stream tee behavior.
+
 ## 🔒 Privacy & Security
 
 - ✅ **No data collection** - Everything stays in your browser

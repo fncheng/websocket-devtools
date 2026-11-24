@@ -6,6 +6,79 @@ let websocketData = {
   isMonitoring: true, // Monitoring enabled by default
 };
 
+// SSE history is bounded independently of existing WebSocket storage.
+const SSE_HISTORY_LIMIT = 20000;
+const SSE_HISTORY_BYTES = 16 * 1024 * 1024;
+let sseHistoryCount = 0;
+let sseHistoryBytes = 0;
+// Approximate retained serialized metadata and payload; this is not a JS heap measurement.
+function sseSize(event) { return JSON.stringify(event).length * 2; }
+function sseConnectionKey(event) { return `${event.tabId}:${event.id}`; }
+// Drop the oldest SSE records, retaining compact metadata for affected connections.
+function evictSseHistory() {
+  const affected = new Map();
+  while (sseHistoryCount > SSE_HISTORY_LIMIT || sseHistoryBytes > SSE_HISTORY_BYTES) {
+    const index = websocketData.connections.findIndex(item => item.protocol === "sse");
+    if (index < 0) break;
+    const [removed] = websocketData.connections.splice(index, 1);
+    sseHistoryCount--;
+    sseHistoryBytes -= sseSize(removed);
+    affected.set(sseConnectionKey(removed), removed);
+  }
+  return affected;
+}
+// Preserve a bounded summary when no event remains for an affected connection.
+function markTruncatedConnections(affected) {
+  for (const [key, removed] of affected) {
+    let candidate;
+    for (let index = websocketData.connections.length - 1; index >= 0; index--) {
+      const item = websocketData.connections[index];
+      if (item.protocol === "sse" && sseConnectionKey(item) === key) { candidate = item; break; }
+    }
+    if (candidate) {
+      if (!candidate.historyTruncated) {
+        const originalSize = sseSize(candidate);
+        candidate.historyTruncated = true;
+        sseHistoryBytes += sseSize(candidate) - originalSize;
+      }
+    } else if (removed.type !== "history-summary") {
+      // A summary may itself be evicted; do not recreate it indefinitely.
+      // Avoid retaining a potentially oversized URL or payload in the summary.
+      const summary = { id: removed.id, tabId: removed.tabId, protocol: "sse", sseSource: removed.sseSource,
+        url: typeof removed.url === "string" ? removed.url.slice(0, 512) : "", type: "history-summary",
+        timestamp: removed.timestamp, direction: "system", messageId: `sse-history:${removed.id}`, historyTruncated: true };
+      if (sseSize(summary) <= SSE_HISTORY_BYTES && SSE_HISTORY_LIMIT > 0) {
+        websocketData.connections.push(summary);
+        sseHistoryCount++;
+        sseHistoryBytes += sseSize(summary);
+      }
+    }
+  }
+}
+function storeEvent(event) {
+  websocketData.connections.push(event);
+  const allAffected = new Map();
+  if (event.protocol !== "sse") return allAffected;
+  sseHistoryCount++;
+  sseHistoryBytes += sseSize(event);
+  let affected = evictSseHistory();
+  while (affected.size > 0) {
+    for (const [key, removed] of affected) allAffected.set(key, { id: removed.id, tabId: removed.tabId });
+    markTruncatedConnections(affected);
+    affected = evictSseHistory();
+  }
+  return allAffected;
+}
+// Notify live panels after forwarding the triggering event, so its connection exists first.
+function notifySseTruncation(affected) {
+  for (const connection of affected.values()) {
+    forwardToDevTools({ type: "sse-history-truncated", data: connection });
+  }
+}
+function isSseConnection(tabId, id) {
+  return typeof id === "string" && id.startsWith("sse_") || websocketData.connections.some(event => event.tabId === tabId && event.id === id && event.protocol === "sse");
+}
+
 // New: Maintain DevTools port <-> tabId mapping
 const devtoolsPorts = new Map(); // port -> tabId
 
@@ -146,10 +219,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
 
       // Store connection data
-      websocketData.connections.push(message.data);
+      const affected = storeEvent(message.data);
 
       // Forward to DevTools Panel
       forwardToDevTools(message);
+      notifySseTruncation(affected);
       sendResponse({ received: true });
       break;
     }
@@ -167,13 +241,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         break;
       }
 
+      const affected = new Map();
       // Process each event in the batch
       batchData.forEach(eventData => {
         // Add tabId to each event
         eventData.tabId = sender.tab.id;
         
         // Store connection data
-        websocketData.connections.push(eventData);
+        for (const [key, connection] of storeEvent(eventData)) affected.set(key, connection);
       });
 
       // Forward batch to DevTools Panel
@@ -186,6 +261,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       };
       
       forwardToDevTools(batchMessage);
+      notifySseTruncation(affected);
       sendResponse({ received: true, batchSize: batchData.length });
       break;
     }
@@ -200,6 +276,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case "simulate-message": {
       // If a tabId is specified, notify only that tab; otherwise, notify all tabs
       const targetTabId = message.data.tabId || null;
+      if (isSseConnection(targetTabId, message.data.connectionId)) { sendResponse({ success: false, error: "SSE is read-only" }); break; }
       notifyAllTabs("simulate-message", message.data, targetTabId);
       sendResponse({ success: true, simulated: true });
       break;
@@ -208,6 +285,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case "simulate-system-event": {
       // Get current active tab ID (from devtools panel context)
       const systemEventTabId = message.data.tabId || null;
+      if (isSseConnection(systemEventTabId, message.data.connectionId)) { sendResponse({ success: false, error: "SSE is read-only" }); break; }
       notifyAllTabs("simulate-system-event", message.data, systemEventTabId);
       sendResponse({ success: true, simulated: true, eventType: message.data.eventType });
       break;
@@ -363,6 +441,10 @@ function clearTabConnections(tabId, navigationUrl = null) {
     (conn) => conn.tabId !== tabId
   );
 
+  const remainingSse = websocketData.connections.filter(event => event.protocol === "sse");
+  sseHistoryCount = remainingSse.length;
+  sseHistoryBytes = remainingSse.reduce((total, event) => total + sseSize(event), 0);
+
   forwardToDevTools({
     type: "page-refresh",
     data: {
@@ -400,6 +482,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 
 // When extension starts up
 chrome.runtime.onStartup.addListener(() => {
+  sseHistoryCount = 0;
+  sseHistoryBytes = 0;
   websocketData = {
     connections: [],
     isMonitoring: true, // Monitoring enabled by default

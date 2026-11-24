@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Select } from "@mantine/core";
 import { t } from "../utils/i18n.js";
 import { collectFieldCandidates, parseProjectionPath } from "../utils/messageProjection.js";
 
@@ -11,6 +12,8 @@ const EMPTY_CANDIDATES = [];
 const MessageProjectionControls = ({ config, messages, cache, onChange }) => {
   const [draftPath, setDraftPath] = useState(config.path);
   const [pathError, setPathError] = useState("");
+  const [areCandidatesFrozen, setCandidatesFrozen] = useState(false);
+  const candidateSnapshotRef = useRef(null);
 
   useEffect(() => {
     setDraftPath(config.path);
@@ -21,6 +24,20 @@ const MessageProjectionControls = ({ config, messages, cache, onChange }) => {
     if (config.mode !== "field") return EMPTY_CANDIDATES;
     return collectFieldCandidates(messages, undefined, cache);
   }, [cache, config.mode, messages]);
+  // Keep the option list stable until the dropdown reports that it closed.
+  const displayedCandidates = areCandidatesFrozen
+    ? candidateSnapshotRef.current || candidates
+    : candidates;
+
+  const freezeCandidates = () => {
+    candidateSnapshotRef.current = candidates;
+    setCandidatesFrozen(true);
+  };
+
+  const resumeCandidateUpdates = () => {
+    candidateSnapshotRef.current = null;
+    setCandidatesFrozen(false);
+  };
 
   const applyPath = () => {
     const parsed = parseProjectionPath(draftPath);
@@ -69,21 +86,24 @@ const MessageProjectionControls = ({ config, messages, cache, onChange }) => {
             {config.path && <button type="button" onClick={clearPath}>{t("messageDetails.projection.clear")}</button>}
           </div>
           {pathError && <span id="message-projection-path-error" className="projection-error" role="alert">{pathError}</span>}
-          {candidates.length > 0 && (
-            <select
+          {displayedCandidates.length > 0 && (
+            <Select
               className="projection-candidates"
-              value=""
+              classNames={{ input: "projection-candidates-input", dropdown: "projection-candidates-dropdown" }}
+              value={null}
+              placeholder={t("messageDetails.projection.candidates")}
               aria-label={t("messageDetails.projection.candidates")}
-              onChange={(event) => {
-                if (!event.target.value) return;
-                setDraftPath(event.target.value);
+              data={displayedCandidates.map((candidate) => ({ value: candidate.path, label: `${candidate.path} — ${candidate.preview}` }))}
+              onDropdownOpen={freezeCandidates}
+              onDropdownClose={resumeCandidateUpdates}
+              onChange={(value) => {
+                if (!value) return;
+                setDraftPath(value);
                 setPathError("");
-                onChange({ path: event.target.value });
+                onChange({ path: value });
               }}
-            >
-              <option value="">{t("messageDetails.projection.candidates")}</option>
-              {candidates.map((candidate) => <option key={candidate.path} value={candidate.path}>{candidate.path} — {candidate.preview}</option>)}
-            </select>
+              comboboxProps={{ withinPortal: true }}
+            />
           )}
           <label className="invert-checkbox projection-checkbox">
             <input type="checkbox" checked={config.hideMissing} onChange={(event) => onChange({ hideMissing: event.target.checked })} />

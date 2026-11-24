@@ -311,5 +311,15 @@
   "messageDetails.projection.expand": "Erweitern",
   "messageDetails.projection.collapse": "Einklappen",
   "messageDetails.projection.searchRawTooltip": "Durchsucht rohe Nachrichtendaten",
-  "messageDetails.projection.lengthTooltip": "Zeichenlänge der ursprünglichen Nachricht"
+  "messageDetails.projection.lengthTooltip": "Zeichenlänge der ursprünglichen Nachricht",
+  "sse.readOnly": "Nur Lesen",
+  "sse.truncated": "Beobachtung abgeschnitten",
+  "sse.historyTruncated": "Älterer SSE-Verlauf entfernt",
+  "sse.reason.byte-limit": "Byte-Limit",
+  "sse.reason.event-limit": "Ereignislimit",
+  "sse.reason.buffer-limit": "Pufferlimit",
+  "sse.reason.time-limit": "Zeitlimit",
+  "sse.reason.monitoring-paused": "Überwachung pausiert",
+  "sse.reason.parser-error": "Parserfehler",
+  "sse.reason.response-wrapper-error": "Antwort-Wrapper nicht verfügbar"
 }

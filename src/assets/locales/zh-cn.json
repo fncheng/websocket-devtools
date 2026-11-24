@@ -318,5 +318,15 @@
   "messageDetails.projection.expand": "展开",
   "messageDetails.projection.collapse": "收起",
   "messageDetails.projection.searchRawTooltip": "搜索原始消息数据",
-  "messageDetails.projection.lengthTooltip": "原始消息字符长度"
+  "messageDetails.projection.lengthTooltip": "原始消息字符长度",
+  "sse.readOnly": "仅观察",
+  "sse.truncated": "观察已截断",
+  "sse.historyTruncated": "较早的 SSE 历史已丢弃",
+  "sse.reason.byte-limit": "字节数上限",
+  "sse.reason.event-limit": "事件数上限",
+  "sse.reason.buffer-limit": "缓冲区上限",
+  "sse.reason.time-limit": "时长上限",
+  "sse.reason.monitoring-paused": "监控已暂停",
+  "sse.reason.parser-error": "解析错误",
+  "sse.reason.response-wrapper-error": "响应包装不可用"
 }

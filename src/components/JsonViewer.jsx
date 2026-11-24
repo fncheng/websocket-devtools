@@ -11,7 +11,7 @@ import Protobuf from "../Icons/Protobuf";
 import JsonContextMenu from "./JsonContextMenu.jsx";
 import {
   getJsonContextTarget,
-  getJsonKeyboardContextPosition,
+  getJsonKeyboardContextTarget,
   getJsonPointerPosition,
   isCompleteJsonSyntaxTree,
 } from "../utils/jsonContextTarget.js";
@@ -506,14 +506,14 @@ const JsonViewer = ({
       ? { x: cursorRect?.left ?? 0, y: cursorRect?.bottom ?? 0 }
       : { x: event.clientX, y: event.clientY };
     const documentText = view.state.doc.toString();
-    const position = isKeyboardInvocation
-      ? getJsonKeyboardContextPosition(documentText, cursorPosition)
-      : getJsonPointerPosition(view, coordinates.x, coordinates.y);
-    if (position === null) return false;
+    const position = isKeyboardInvocation ? null : getJsonPointerPosition(view, coordinates.x, coordinates.y);
+    if (!isKeyboardInvocation && position === null) return false;
 
     const tree = ensureSyntaxTree(view.state, view.state.doc.length, 20);
     if (!tree || !isCompleteJsonSyntaxTree(tree, view.state.doc.length)) return false;
-    const target = getJsonContextTarget(tree, documentText, position);
+    const target = isKeyboardInvocation
+      ? getJsonKeyboardContextTarget(tree, documentText, cursorPosition)
+      : getJsonContextTarget(tree, documentText, position);
     if (!target) return false;
 
     event.preventDefault();

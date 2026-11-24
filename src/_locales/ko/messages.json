@@ -1259,6 +1259,46 @@
     "message": "원본 메시지 문자 길이",
     "description": "Translation for messageDetails.projection.lengthTooltip"
   },
+  "sse_readOnly": {
+    "message": "읽기 전용",
+    "description": "Translation for sse.readOnly"
+  },
+  "sse_truncated": {
+    "message": "관찰이 제한됨",
+    "description": "Translation for sse.truncated"
+  },
+  "sse_historyTruncated": {
+    "message": "이전 SSE 기록이 삭제됨",
+    "description": "Translation for sse.historyTruncated"
+  },
+  "sse_reason_byte_limit": {
+    "message": "바이트 제한",
+    "description": "Translation for sse.reason.byte-limit"
+  },
+  "sse_reason_event_limit": {
+    "message": "이벤트 제한",
+    "description": "Translation for sse.reason.event-limit"
+  },
+  "sse_reason_buffer_limit": {
+    "message": "버퍼 제한",
+    "description": "Translation for sse.reason.buffer-limit"
+  },
+  "sse_reason_time_limit": {
+    "message": "시간 제한",
+    "description": "Translation for sse.reason.time-limit"
+  },
+  "sse_reason_monitoring_paused": {
+    "message": "모니터링 일시 중지",
+    "description": "Translation for sse.reason.monitoring-paused"
+  },
+  "sse_reason_parser_error": {
+    "message": "구문 분석 오류",
+    "description": "Translation for sse.reason.parser-error"
+  },
+  "sse_reason_response_wrapper_error": {
+    "message": "응답 래퍼 사용 불가",
+    "description": "Translation for sse.reason.response-wrapper-error"
+  },
   "extensionName": {
     "message": "WebSocket DevTools",
     "description": "Extension name"

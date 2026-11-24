@@ -436,7 +436,7 @@
   // Generate unique connection ID with frame context
   function generateConnectionId() {
     const frameContext = window !== window.top ? 'iframe' : 'main';
-    return `ws_${frameContext}_${Date.now()}_${++connectionIdCounter}`;
+    return `ws_${frameContext}_${Date.now()}_${++connectionIdCounter}_${Math.random().toString(36).slice(2, 10)}`;
   }
 
   // Generate unique message ID (simple UUID v4)
@@ -484,6 +484,7 @@
       console.warn(`[WebSocket Proxy] Circuit breaker triggered - High traffic (${traffic.count} msg/s). Stopping monitoring.`);
 
       // Stop monitoring
+      stopActiveSseObservers("monitoring-paused");
       proxyState.isMonitoring = false;
 
       // Notify (will be received by panel if open, or background will update state)
@@ -1222,6 +1223,229 @@
     }
   }
 
+  /** @typedef {import('../types/sse.js').SseRequestContext} SseRequestContext */
+  /** @typedef {import('../types/sse.js').SseCaptureEvent} SseCaptureEvent */
+  // SSE observation follows the application's reads; it never creates a tee branch.
+  // Limits bound retained parser data and extension traffic, not browser network buffers.
+  const sseLimits = { bytes: 8 * 1024 * 1024, events: 5000, buffer: 256 * 1024, duration: 30 * 60 * 1000 };
+  const activeSseObservers = new Set();
+  /** @param {string} reason Why observation stopped. */
+  function stopActiveSseObservers(reason) {
+    for (const observer of activeSseObservers) observer.stop(reason);
+  }
+  /**
+   * @param {string} id Local connection ID.
+   * @param {string} url Script-visible URL.
+   * @param {'fetch'|'EventSource'} source API used by the page.
+   * @param {SseRequestContext} metadata Available response metadata, without request credentials.
+   */
+  function createSseObserver(id, url, source, metadata = {}) {
+    const started = Date.now();
+    let bytes = 0, count = 0, stopped = false;
+    const base = { id, url, protocol: "sse", sseSource: source, ...metadata };
+    /** @param {string} type @param {Partial<SseCaptureEvent>} extra @param {boolean} force */
+    const emit = (type, extra = {}, force = false) => {
+      if (stopped && !force) return;
+      sendEvent({ ...base, type, direction: type === "message" ? "incoming" : "system",
+        timestamp: Date.now(), messageId: generateMessageId(), ...extra }, force);
+      if (type === "close" || type === "error") { stopped = true; activeSseObservers.delete(observer); clearTimeout(deadline); }
+    };
+    const deadline = setTimeout(() => observer.stop("time-limit"), sseLimits.duration);
+    const observer = {
+      emit,
+      get stopped() { return stopped; },
+      stop(reason) {
+        if (stopped) return;
+        stopped = true;
+        activeSseObservers.delete(observer);
+        clearTimeout(deadline);
+        if (reason) {
+          emit("truncated", { reason, data: reason }, true);
+          emit("close", { status: reason === "monitoring-paused" ? "paused" : "truncated", reason }, true);
+        }
+      },
+      accept(size) {
+        if (stopped) return false;
+        if (!proxyState.isMonitoring) { this.stop("monitoring-paused"); return false; }
+        bytes += size;
+        if (bytes > sseLimits.bytes || count >= sseLimits.events || Date.now() - started > sseLimits.duration) {
+          this.stop(bytes > sseLimits.bytes ? "byte-limit" : count >= sseLimits.events ? "event-limit" : "time-limit");
+          return false;
+        }
+        return true;
+      },
+      message(data, eventName, lastEventId, retry) {
+        // Include repeated server IDs and event names in the observation budget.
+        if (!this.accept(((eventName || "").length + (lastEventId || "").length) * 2)) return;
+        count++;
+        emit("message", { data, eventName, lastEventId, retry });
+      },
+    };
+    activeSseObservers.add(observer);
+    emit("connection", { status: "connecting" });
+    return observer;
+  }
+
+  // Parse complete SSE records while retaining incomplete lines across UTF-8 chunks.
+  function createSseParser(observer) {
+    const decoder = new TextDecoder("utf-8");
+    let line = "", data = [], dataLength = 0, eventName = "", lastEventId = "", retry, pendingCR = false, first = true;
+    function processLine(value) {
+      if (value === "") {
+        if (data.length) observer.message(data.join("\n"), eventName || "message", lastEventId, retry);
+        data = []; dataLength = 0; eventName = "";
+        return;
+      }
+      if (value[0] === ":") return;
+      const colon = value.indexOf(":");
+      const field = colon < 0 ? value : value.slice(0, colon);
+      let val = colon < 0 ? "" : value.slice(colon + 1);
+      if (val[0] === " ") val = val.slice(1);
+      if (field === "data") { data.push(val); dataLength += val.length + 1; }
+      else if (field === "event") eventName = val;
+      else if (field === "id" && !val.includes("\0")) lastEventId = val;
+      else if (field === "retry" && /^\d+$/.test(val)) retry = Number(val);
+    }
+    function consume(text) {
+      if (first && text.length) { first = false; if (text.charCodeAt(0) === 0xfeff) text = text.slice(1); }
+      for (const char of text) {
+        if (pendingCR) { pendingCR = false; if (char === "\n") continue; }
+        if (char === "\r" || char === "\n") {
+          processLine(line); line = "";
+          if (char === "\r") pendingCR = true;
+        } else line += char;
+        if (line.length + dataLength > sseLimits.buffer) { observer.stop("buffer-limit"); return; }
+      }
+    }
+    return {
+      push(chunk) { if (observer.accept(chunk.byteLength)) consume(decoder.decode(chunk, { stream: true })); },
+      finish() { if (!observer.stopped) consume(decoder.decode()); },
+    };
+  }
+
+  if (typeof window.EventSource === "function") {
+    const NativeEventSource = window.EventSource;
+    function ObservedEventSource(...args) {
+      if (!new.target) return NativeEventSource.apply(this, args);
+      const source = Reflect.construct(NativeEventSource, args, new.target === ObservedEventSource ? NativeEventSource : new.target);
+      if (!proxyState.isMonitoring) return source;
+      const observer = createSseObserver(`sse_${generateConnectionId()}`, source.url, "EventSource");
+      const nativeAdd = source.addEventListener;
+      const nativeClose = source.close;
+      const observedNames = new Set();
+      function recordMessage(event) {
+        if (observer.accept(typeof event.data === "string" ? event.data.length * 2 : 0))
+          observer.message(event.data, event.type, event.lastEventId || "");
+      }
+      function observe(name) {
+        if (observedNames.has(name) || name === "open" || name === "error") return;
+        observedNames.add(name);
+        nativeAdd.call(source, name, recordMessage);
+      }
+      observe("message");
+      // Servers may use "open" or "error" as a named MessageEvent too.
+      nativeAdd.call(source, "open", (event) => {
+        if ("data" in event) recordMessage(event);
+        else observer.emit("open", { status: "open" });
+      });
+      nativeAdd.call(source, "error", (event) => {
+        if ("data" in event) recordMessage(event);
+        else observer.emit(source.readyState === NativeEventSource.CLOSED ? "close" : "connection", { status: source.readyState === NativeEventSource.CLOSED ? "close" : "connecting" });
+      });
+      source.addEventListener = function(type, listener, options) {
+        if (this === source && listener != null) observe(String(type));
+        return nativeAdd.call(this, type, listener, options);
+      };
+      source.close = function() {
+        const result = nativeClose.apply(this, arguments);
+        if (this === source) observer.emit("close", { status: "close" });
+        return result;
+      };
+      return source;
+    }
+    Object.setPrototypeOf(ObservedEventSource, NativeEventSource);
+    ObservedEventSource.prototype = NativeEventSource.prototype;
+    window.EventSource = ObservedEventSource;
+  }
+
+  if (typeof window.fetch === "function" && typeof ReadableStream === "function" && typeof Response === "function") {
+    const nativeFetch = window.fetch;
+    window.fetch = function(...args) {
+      return nativeFetch.apply(this, args).then((response) => {
+        if (!proxyState.isMonitoring || !response.body || !/^text\/event-stream(?:\s*;|\s*$)/i.test(response.headers.get("content-type") || "")) return response;
+        const input = args[0], init = args[1];
+        const method = (init && init.method) || (input && input.method) || "GET";
+        const observer = createSseObserver(`sse_${generateConnectionId()}`, response.url || String(input), "fetch", { method, httpStatus: response.status });
+        const parser = createSseParser(observer);
+        let reader, streamController, settled = false;
+        const signal = init && init.signal !== undefined ? init.signal : input && input.signal;
+        const cleanup = () => signal?.removeEventListener("abort", onAbort);
+        const onAbort = () => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          observer.emit("close", { status: "close", reason: "aborted" });
+          streamController.error(signal.reason === undefined ? new DOMException("The operation was aborted.", "AbortError") : signal.reason);
+        };
+        const stream = new ReadableStream({
+          start(controller) { streamController = controller; },
+          async pull(controller) {
+            try {
+              if (!reader) reader = response.body.getReader();
+              const result = await reader.read();
+              if (settled) return;
+              if (result.done) { settled = true; cleanup(); parser.finish(); observer.emit("close", { status: "close" }); controller.close(); return; }
+              try { parser.push(result.value); } catch (_) { observer.stop("parser-error"); }
+              controller.enqueue(result.value);
+            } catch (error) {
+              if (settled) return;
+              settled = true; cleanup();
+              observer.emit("error", { status: "error" });
+              controller.error(error);
+            }
+          },
+          cancel(reason) {
+            settled = true; cleanup();
+            observer.emit("close", { status: "close", reason: "cancelled" });
+            return reader ? reader.cancel(reason) : response.body.cancel(reason);
+          },
+        }, { highWaterMark: 0 });
+        let wrapped;
+        try {
+          wrapped = new Response(stream, { status: response.status, statusText: response.statusText, headers: response.headers });
+          const preserveMetadata = (target) => {
+            for (const property of ["url", "type", "redirected", "headers"]) Object.defineProperty(target, property, { configurable: true, get: () => response[property] });
+            // Constructed Response body helpers can turn an abort into TypeError.
+            // Restore the originating signal reason for this response only.
+            for (const method of ["text", "json", "blob", "arrayBuffer", "formData"]) {
+              const nativeMethod = target[method];
+              if (typeof nativeMethod !== "function") continue;
+              Object.defineProperty(target, method, { configurable: true, writable: true, value(...args) {
+                return nativeMethod.apply(this, args).catch(error => {
+                  if (this === target && signal?.aborted) throw signal.reason === undefined ? new DOMException("The operation was aborted.", "AbortError") : signal.reason;
+                  throw error;
+                });
+              } });
+            }
+            const nativeClone = target.clone;
+            Object.defineProperty(target, "clone", { configurable: true, writable: true, value() {
+              const clone = nativeClone.call(this);
+              return this === target ? preserveMetadata(clone) : clone;
+            } });
+            return target;
+          };
+          preserveMetadata(wrapped);
+        } catch (_) { observer.stop("response-wrapper-error"); return response; }
+        observer.emit("open", { status: "open" });
+        if (signal) {
+          signal.addEventListener("abort", onAbort, { once: true });
+          if (signal.aborted) onAbort();
+        }
+        return wrapped;
+      });
+    };
+  }
+
   // Listen for URL changes (SPA navigation)
   let lastUrl = window.location.href;
   const checkUrlChange = () => {
@@ -1280,6 +1504,7 @@
           break;
 
         case "stop-monitoring":
+          stopActiveSseObservers("monitoring-paused");
           proxyState.isMonitoring = false;
           // // Send state update
           // sendEvent({

@@ -552,6 +552,7 @@ const MessageDetails = ({
               ? (message.status === "paused" ? t("sse.reason.monitoring-paused") : message.status === "truncated" ? t("sse.truncated") : t("messageDetails.connection.disconnected", { url: message.url || "WebSocket" }))
               : message.type === "error"
               ? t("messageDetails.connection.connectionError")
+              : message.type === "history-summary" ? t("sse.historyTruncated")
               : message.type === "connection" ? t("panel.connectionList.status.connecting")
               : message.type === "truncated" ? `${t("sse.truncated")}: ${t(`sse.reason.${message.reason}`)}` : message.type}
           </span>
@@ -633,7 +634,7 @@ const MessageDetails = ({
             <div className="message-list-pane">
               <div className="details-header">
                 <div className="connection-info">
-                  {connection.messages.some((message) => message.historyTruncated) && <span>{t("sse.historyTruncated")}</span>}
+                  {(connection.historyTruncated || connection.messages.some((message) => message.historyTruncated)) && <span>{t("sse.historyTruncated")}</span>}
                   <span className="connection-badge" title={connection.url}>{connection.protocol === "sse" ? `SSE · ${t("sse.readOnly")} · ${connection.sseSource} ${connection.method || ""} ${connection.httpStatus || ""} · ` : "WebSocket · "}{connection.url}</span>
                 </div>
                 <div className="controls">

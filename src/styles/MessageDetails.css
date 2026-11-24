@@ -712,7 +712,7 @@
 .projection-empty-state button:focus-visible,
 .message-projection-expand:focus-visible,
 .projection-path-control input:focus-visible,
-.projection-candidates:focus-visible {
+.projection-candidates-input:focus-visible {
   outline: 1px solid var(--accent-color);
   outline-offset: 1px;
 }
@@ -732,7 +732,7 @@
 }
 
 .projection-path-control input,
-.projection-candidates {
+.projection-candidates-input {
   border: 1px solid var(--border-color);
   border-radius: 2px;
   background: var(--bg-primary);
@@ -750,6 +750,20 @@
 .projection-candidates {
   flex: 1 1 220px;
   max-width: 360px;
+  min-width: 0;
+}
+
+.projection-candidates-input {
+  min-height: 20px;
+  padding-left: 5px;
+  padding-right: 24px;
+}
+
+.projection-candidates-dropdown {
+  background: var(--bg-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  font-size: 10px;
 }
 
 .projection-checkbox {

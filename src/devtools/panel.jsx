@@ -194,7 +194,16 @@ const WebSocketPanel = () => {
       const hasSendResponse = typeof sendResponse === 'function';
       
       // Handle batched events
-      if (message.type === "websocket-event-batch") {
+      if (message.type === "sse-history-truncated") {
+        if (message.data?.tabId !== tabId) return;
+        setConnectionsMap((previous) => {
+          const connection = previous.get(message.data.id);
+          if (!connection || connection.historyTruncated) return previous;
+          const next = new Map(previous);
+          next.set(message.data.id, { ...connection, historyTruncated: true });
+          return next;
+        });
+      } else if (message.type === "websocket-event-batch") {
         const batchEvents = message.data;
         if (!batchEvents || !Array.isArray(batchEvents)) return;
 

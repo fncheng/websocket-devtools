@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Select } from "@mantine/core";
 import { t } from "../utils/i18n.js";
 import { collectFieldCandidates, parseProjectionPath } from "../utils/messageProjection.js";
 
@@ -23,7 +24,7 @@ const MessageProjectionControls = ({ config, messages, cache, onChange }) => {
     if (config.mode !== "field") return EMPTY_CANDIDATES;
     return collectFieldCandidates(messages, undefined, cache);
   }, [cache, config.mode, messages]);
-  // Native select menus repaint when their option nodes change while open.
+  // Keep the option list stable until the dropdown reports that it closed.
   const displayedCandidates = areCandidatesFrozen
     ? candidateSnapshotRef.current || candidates
     : candidates;
@@ -86,27 +87,23 @@ const MessageProjectionControls = ({ config, messages, cache, onChange }) => {
           </div>
           {pathError && <span id="message-projection-path-error" className="projection-error" role="alert">{pathError}</span>}
           {displayedCandidates.length > 0 && (
-            <select
+            <Select
               className="projection-candidates"
-              value=""
+              classNames={{ input: "projection-candidates-input", dropdown: "projection-candidates-dropdown" }}
+              value={null}
+              placeholder={t("messageDetails.projection.candidates")}
               aria-label={t("messageDetails.projection.candidates")}
-              onMouseDown={freezeCandidates}
-              onKeyDown={(event) => {
-                if (event.key === "Escape") resumeCandidateUpdates();
-                else if ([" ", "ArrowDown", "ArrowUp", "Enter"].includes(event.key)) freezeCandidates();
-              }}
-              onBlur={resumeCandidateUpdates}
-              onChange={(event) => {
-                if (!event.target.value) return;
-                setDraftPath(event.target.value);
+              data={displayedCandidates.map((candidate) => ({ value: candidate.path, label: `${candidate.path} — ${candidate.preview}` }))}
+              onDropdownOpen={freezeCandidates}
+              onDropdownClose={resumeCandidateUpdates}
+              onChange={(value) => {
+                if (!value) return;
+                setDraftPath(value);
                 setPathError("");
-                onChange({ path: event.target.value });
-                resumeCandidateUpdates();
+                onChange({ path: value });
               }}
-            >
-              <option value="">{t("messageDetails.projection.candidates")}</option>
-              {displayedCandidates.map((candidate) => <option key={candidate.path} value={candidate.path}>{candidate.path} — {candidate.preview}</option>)}
-            </select>
+              comboboxProps={{ withinPortal: true }}
+            />
           )}
           <label className="invert-checkbox projection-checkbox">
             <input type="checkbox" checked={config.hideMissing} onChange={(event) => onChange({ hideMissing: event.target.checked })} />

@@ -80,6 +80,33 @@ test("repeated evictions and oversized self-eviction keep the byte budget consis
     const actual = events.reduce((sum, event) => sum + JSON.stringify(event).length * 2, 0);
     assert.ok(actual <= 600);
     assert.equal(vm.runInContext("sseHistoryBytes", context), actual);
-    if (i === 20) assert.equal(events.length, 0);
+    if (i === 20) {
+      assert.equal(events.length, 1);
+      assert.equal(events[0].type, "history-summary");
+      assert.equal(events[0].historyTruncated, true);
+    }
   }
+});
+
+
+test("SSE history eviction informs live panels about the affected older connection", async () => {
+  let onMessage, onConnect, onPortMessage;
+  const sent = [];
+  const hook = () => ({ addListener() {} });
+  const chrome = {
+    runtime: { onConnect: { addListener(fn) { onConnect = fn; } }, onInstalled: hook(), onMessage: { addListener(fn) { onMessage = fn; } }, onStartup: hook(), onSuspend: hook(), onUpdateAvailable: hook() },
+    storage: { local: { get(_keys, done) { done({}); }, set() {} } },
+    tabs: { onUpdated: hook(), query() { return Promise.resolve([]); }, sendMessage() { return Promise.resolve(); } },
+  };
+  const source = (await readFile(new URL("../src/background/background.js", import.meta.url), "utf8"))
+    .replace("const SSE_HISTORY_LIMIT = 20000;", "const SSE_HISTORY_LIMIT = 2;");
+  vm.runInContext(source, vm.createContext({ chrome, URL, console, setInterval() {}, clearInterval() {} }));
+  const port = { name: "devtools", onMessage: { addListener(fn) { onPortMessage = fn; } }, onDisconnect: hook(), postMessage(value) { sent.push(value); } };
+  onConnect(port);
+  onPortMessage({ type: "init", tabId: 7 });
+  const send = (id, n) => onMessage({ type: "websocket-event", data: { id, protocol: "sse", type: "message", messageId: `${id}-${n}`, data: "x" } }, { tab: { id: 7 } }, () => {});
+  send("sse_a", 1); send("sse_a", 2); send("sse_b", 1);
+  const updates = sent.filter(entry => entry.type === "sse-history-truncated");
+  assert.ok(updates.some(entry => entry.data.id === "sse_a" && entry.data.tabId === 7));
+  assert.ok(sent.findIndex(entry => entry.type === "websocket-event" && entry.data.id === "sse_b") < sent.findIndex(entry => entry.type === "sse-history-truncated"));
 });
